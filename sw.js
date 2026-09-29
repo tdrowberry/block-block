@@ -1,4 +1,4 @@
-const CACHE='block-block-app-v2';
+const CACHE='block-block-app-v3';
 const FILES=['./','./index.html','./style.css','./game.js','./camera.js','./progress.js','./logic.js','./puzzle.js','./advanced-levels.js','./power-levels.js','./teleport-levels.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('block-block-app-')&&key!==CACHE)await caches.delete(key);await self.clients.claim()})()));
