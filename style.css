@@ -2,3 +2,5 @@
 @media(min-width:700px){.menu-intro em{margin-left:.2em}}
 
 .level-button:not(:disabled){box-shadow:inset 0 -3px 0 var(--t,transparent)}.level-button.current{box-shadow:inset 0 -3px 0 #0003}.made-with{display:block;margin-top:18px;font-size:10px;letter-spacing:2px;color:#8fa788}.play-screen,.play-footer{transition:background .4s}
+
+.world{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:radial-gradient(circle,hsla(var(--hue,150),30%,14%,.82),var(--bgc,#14271e));animation:worldin .5s ease-out;cursor:pointer}.world h2{margin:8px 0 0;font-size:clamp(44px,14vw,84px);letter-spacing:-3px;font-weight:700;color:var(--accent,#d2e8a7)}.world strong{font-family:Georgia,serif;font-style:italic;font-weight:400;font-size:clamp(26px,7vw,40px)}.world small{margin-top:26px;font-size:9px;letter-spacing:2px;color:#9eb48f}#confetti{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}@keyframes worldin{from{opacity:0;transform:scale(.94)}}@media(prefers-reduced-motion:reduce){.world{animation:none}}

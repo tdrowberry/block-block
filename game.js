@@ -9,6 +9,22 @@ const themes=[['Moss',150,80],['Ocean',205,175],['Sunset',20,40],['Grape',275,30
 const themeOf=i=>{const[name,h,a]=themes[Math.floor(i/5)%themes.length];return{name,h,a}};
 let th=themeOf(0);
 function applyTheme(i){th=themeOf(i);const r=document.documentElement.style;r.setProperty('--accent',`hsl(${th.a},55%,74%)`);r.setProperty('--bgc',`hsl(${th.h},30%,12%)`);document.querySelector('meta[name=theme-color]').content=`hsl(${th.h},30%,12%)`}
+let splashFor=-1,splashTimer=0,bits=[];const cv=$('confetti'),cctx=cv.getContext('2d');
+function hideWorld(){clearTimeout(splashTimer);$('world').hidden=true;if(phase==='splash')phase='playing'}
+function showWorld(i){
+ splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1}`;$('world-name').textContent=th.name;$('world').hidden=false;
+ splashTimer=setTimeout(hideWorld,2600);if(reduced)return;
+ const ratio=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;cv.width=w*ratio;cv.height=h*ratio;cctx.setTransform(ratio,0,0,ratio,0,0);
+ const hues=[th.a,th.h,(th.a+40)%360,(th.h+180)%360];bits=[];
+ for(let n=0;n<150;n++){const side=n%2?1:-1,ang=-Math.PI/2+side*(.15+Math.random()*.7),sp=(.55+Math.random()*.6)*Math.min(h,900)*.021;bits.push({x:w/2+side*w*.42,y:h*.85,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,s:4+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*.4,c:n%9===0?'#fff':`hsl(${hues[n%4]},80%,${55+Math.random()*20}%)`,life:1})}
+}
+let lastConf=0;
+function confetti(time){
+ const k=Math.min(4,Math.max(.2,(time-lastConf)/16.7||1));lastConf=time;if(!bits.length)return;cctx.clearRect(0,0,cv.width,cv.height);
+ for(const b of bits){b.vy+=.28*k;b.vx*=Math.pow(.99,k);b.x+=b.vx*k;b.y+=b.vy*k;b.rot+=b.vr*k;b.life-=.006*k;cctx.save();cctx.globalAlpha=Math.max(0,Math.min(1,b.life*2));cctx.translate(b.x,b.y);cctx.rotate(b.rot);cctx.scale(1,Math.abs(Math.cos(b.rot*1.7))+.2);cctx.fillStyle=b.c;cctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);cctx.restore()}
+ bits=bits.filter(b=>b.life>0&&b.y<innerHeight+30);if(!bits.length)cctx.clearRect(0,0,cv.width,cv.height);
+}
+$('world').onclick=hideWorld;
 const chapterNames=['01 · FIND YOUR FOOTING','02 · CHANGE YOUR SHAPE','03 · BUILD YOUR BRIDGES','04 · STEP THROUGH SPACE'];
 function renderLevels(){
  const frontier=unlockedThrough(bests,levels.length);$('levels').replaceChildren();
@@ -22,7 +38,7 @@ function renderLevels(){
  const count=Object.keys(bests).length;$('progress-label').textContent=`${count} / ${levels.length} completed`;$('progress-percent').textContent=`${Math.round(count/levels.length*100)}%`;$('progress-bar').value=count;$('progress-bar').max=levels.length;
  $('continue').textContent=`${count===levels.length?'Replay':frontier===0?'Start':'Continue'} level ${String(frontier+1).padStart(2,'0')} ↗`;
 }
-function showLevels(){applyTheme(0);screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();window.scrollTo(0,0)}
+function showLevels(){applyTheme(0);splashFor=-1;hideWorld();bits=[];screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();window.scrollTo(0,0)}
 function tone(freq=160,duration=.08){if(!sound)return;try{audio??=new AudioContext();audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);gain.gain.setValueAtTime(.06,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+duration)}catch{}}
 function update(){ $('moves').textContent=String(history.length).padStart(2,'0');$('best').textContent=bests[scoreKey(levelIndex)]??'—';$('block-size').textContent=`${sizeOf(state)} × 1 × 1${levels[levelIndex].pads?.some(p=>p.type==='bridge')?` · BRIDGES ${state.open?'ON':'OFF'}`:''}`;canvas.setAttribute('aria-busy',String(Boolean(animation)));}
 function load(i,afterFall=false){
@@ -32,6 +48,7 @@ function load(i,afterFall=false){
  $('level-tag').textContent=`LEVEL ${String(i+1).padStart(2,'0')} / ${levels.length} · ${th.name.toUpperCase()}`;$('level-name').textContent=levels[i].name;
  $('status').textContent=(!afterFall&&i%5===0&&i>0?`New world: ${th.name}! `:'')+(afterFall?'New attempt. Keep the whole block on the tiles.':levels[i].pads?.length?levels[i].description:'Swipe to roll. Stand upright on the glowing exit.');
  update();resize();canvas.focus({preventScroll:true});
+ hideWorld();if(!afterFall&&i>0&&i%5===0&&splashFor!==i)showWorld(i);
 }
 function move(dir){if(screen!=='play'||$('help-dialog').open||phase!=='playing'||animation)return;history.push({...state});animation={kind:'roll',from:{...state},to:roll(state,dir),dir,start:performance.now(),duration:reduced?60:190};tone();update()}
 function finish(success){
@@ -83,7 +100,7 @@ function tile(x,z,goal,time){const a=x-.47,b=x+.47,c=z-.47,d=z+.47,depth=-.23;po
 function vertices(s){const n=sizeOf(s),w=s.o==='x'?n:1,h=s.o==='u'?n:1,d=s.o==='z'?n:1;return [[0,0,0],[w,0,0],[w,0,d],[0,0,d],[0,h,0],[w,h,0],[w,h,d],[0,h,d]].map(([x,y,z])=>[s.x-.5+(x===0?.055:x-.055),y===0?.025:y-.025,s.z-.5+(z===0?.055:z-.055)])}
 function transformed(time){if(!animation)return vertices(state);const a=animation,t=Math.min(1,(time-a.start)/a.duration);if(a.kind==='teleport')return vertices(t<.5?a.from:a.to);if(a.kind==='morph'){const from=vertices(a.from),to=vertices(a.to),e=t*t*(3-2*t);return from.map((v,i)=>v.map((c,j)=>c+(to[i][j]-c)*e))}if(a.kind==='roll'){const eased=t*t*(3-2*t),v=vertices(a.from),s=a.from,w=s.o==='x'?sizeOf(s):1,d=s.o==='z'?sizeOf(s):1;const horizontal=a.dir==='left'||a.dir==='right',pivot=horizontal?(a.dir==='right'?s.x+w-.5:s.x-.5):(a.dir==='down'?s.z+d-.5:s.z-.5),angle=eased*Math.PI/2*(a.dir==='right'||a.dir==='up'?-1:1),co=Math.cos(angle),si=Math.sin(angle);return v.map(([x,y,z])=>{if(horizontal){const q=x-pivot;return[pivot+q*co-y*si,q*si+y*co,z]}const q=z-pivot;return[x,y*co-q*si,pivot+y*si+q*co]})}return vertices(state).map(([x,y,z])=>[x,y-t*t*(a.kind==='win'?3:7),z])}
 function drawBlock(v,alpha=1){const faces=[[0,3,2,1],[0,1,5,4],[3,0,4,7],[1,2,6,5],[2,3,7,6],[4,5,6,7]],colors=[41,63,55,65,55,80].map(l=>`hsl(${th.a},${l>70?60:40}%,${l}%)`);const ordered=faces.map((f,i)=>({f,i,depth:f.reduce((sum,j)=>sum+cameraDepth(v[j]),0)/4})).sort((a,b)=>a.depth-b.depth);ctx.save();ctx.globalAlpha=alpha;for(const {f,i}of ordered)polygon(f.map(j=>v[j]),colors[i],`hsla(${th.a},80%,85%,.33)`);ctx.restore()}
-function frame(time){if(screen!=='play'||$('help-dialog').open){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,`hsl(${th.h},25%,19%)`);bg.addColorStop(1,`hsl(${th.h},30%,11%)`);ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=`hsla(${th.a},30%,75%,.05)`;for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
+function frame(time){confetti(time);if(screen!=='play'||$('help-dialog').open){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,`hsl(${th.h},25%,19%)`);bg.addColorStop(1,`hsl(${th.h},30%,11%)`);ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=`hsla(${th.a},30%,75%,.05)`;for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
  const l=levels[levelIndex],tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b')tiles.push([x,z])}));tiles.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  ctx.save();ctx.filter='blur(15px)';for(const[x,z]of tiles)polygon([[x-.5,-.65,z-.5],[x+.5,-.65,z-.5],[x+.5,-.65,z+.5],[x-.5,-.65,z+.5]],'#00000030');ctx.restore();
  const dropping=animation&&(animation.kind==='fall'||animation.kind==='win');if(dropping)drawBlock(transformed(time),Math.max(0,1-(time-animation.start)/animation.duration));
