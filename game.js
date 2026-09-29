@@ -9,9 +9,10 @@ const themes=[['Moss',150,80],['Ocean',205,175],['Sunset',20,40],['Grape',275,30
 const themeOf=i=>{const[name,h,a]=themes[Math.floor(i/5)%themes.length];return{name,h,a}};
 let th=themeOf(0);
 function applyTheme(i){th=themeOf(i);const r=document.documentElement.style;r.setProperty('--accent',`hsl(${th.a},55%,74%)`);r.setProperty('--bgc',`hsl(${th.h},30%,12%)`);document.querySelector('meta[name=theme-color]').content=`hsl(${th.h},30%,12%)`}
-let splashFor=-1,splashTimer=0,bits=[];const cv=$('confetti'),cctx=cv.getContext('2d');
-function hideWorld(){clearTimeout(splashTimer);$('world').hidden=true;if(phase==='splash')phase='playing'}
+let splashFor=-1,splashTimer=0,bits=[];const cv=$('confetti'),cctx=cv?.getContext('2d');
+function hideWorld(){clearTimeout(splashTimer);if($('world'))$('world').hidden=true;if(phase==='splash')phase='playing'}
 function showWorld(i){
+ if(!$('world')||!cv)return;
  splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1}`;$('world-name').textContent=th.name;$('world').hidden=false;
  splashTimer=setTimeout(hideWorld,2600);if(reduced)return;
  const ratio=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;cv.width=w*ratio;cv.height=h*ratio;cctx.setTransform(ratio,0,0,ratio,0,0);
@@ -24,7 +25,7 @@ function confetti(time){
  for(const b of bits){b.vy+=.28*k;b.vx*=Math.pow(.99,k);b.x+=b.vx*k;b.y+=b.vy*k;b.rot+=b.vr*k;b.life-=.006*k;cctx.save();cctx.globalAlpha=Math.max(0,Math.min(1,b.life*2));cctx.translate(b.x,b.y);cctx.rotate(b.rot);cctx.scale(1,Math.abs(Math.cos(b.rot*1.7))+.2);cctx.fillStyle=b.c;cctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);cctx.restore()}
  bits=bits.filter(b=>b.life>0&&b.y<innerHeight+30);if(!bits.length)cctx.clearRect(0,0,cv.width,cv.height);
 }
-$('world').onclick=hideWorld;
+if($('world'))$('world').onclick=hideWorld;
 const chapterNames=['01 · FIND YOUR FOOTING','02 · CHANGE YOUR SHAPE','03 · BUILD YOUR BRIDGES','04 · STEP THROUGH SPACE'];
 function renderLevels(){
  const frontier=unlockedThrough(bests,levels.length);$('levels').replaceChildren();
