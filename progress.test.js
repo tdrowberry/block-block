@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {cleanScores,canPlay,recordWin,unlockedThrough,scoreKey} from './progress.js';
+test('fresh installs expose only level one',()=>{assert.equal(canPlay({},0,36),true);for(let i=1;i<36;i++)assert.equal(canPlay({},i,36),false)});
+test('a win unlocks exactly the next level and keeps cleared levels replayable',()=>{const p=recordWin({},0,5,36);assert.equal(unlockedThrough(p,36),1);assert.ok(canPlay(p,0,36));assert.ok(canPlay(p,1,36));assert.equal(canPlay(p,2,36),false);assert.deepEqual(recordWin(p,2,6,36),p)});
+test('out-of-order legacy scores cannot bypass unfinished levels',()=>{const p=cleanScores({'0':5,'10':30,'size-intro-v1':9,'30':4},36);assert.equal(unlockedThrough(p,36),1);assert.equal(canPlay(p,10,36),false);assert.equal(p['size-intro-v1'],9);assert.equal(p['10'],undefined)});
+test('invalid scores and invalid level requests do not unlock progress',()=>{assert.deepEqual(cleanScores({'0':0,'1':-1,'2':'5','3':Infinity,'4':2.5},36),{});for(const i of [-1,36,1.5,NaN])assert.equal(canPlay({},i,36),false)});
+test('replaying preserves the best score and final completion stays within the campaign',()=>{let p={};for(let i=0;i<36;i++)p=recordWin(p,i,60,36);assert.equal(unlockedThrough(p,36),35);assert.equal(Object.keys(p).length,36);assert.equal(recordWin(p,0,80,36)['0'],60);assert.equal(recordWin(p,0,5,36)['0'],5);assert.equal(p[scoreKey(10)],60)});
