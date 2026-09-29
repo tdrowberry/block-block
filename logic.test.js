@@ -1,5 +1,6 @@
 import test from 'node:test';
 import './progress.test.js';
+import './camera.test.js';
 import assert from 'node:assert/strict';
 import {levels,roll,cells,supported,won,solve,swipeDirection,step,activate,sizeOf} from './logic.js';
 test('swipes follow the dominant direction and ignore taps or small finger movement',()=>{assert.equal(swipeDirection(60,12),'right');assert.equal(swipeDirection(-60,12),'left');assert.equal(swipeDirection(12,60),'down');assert.equal(swipeDirection(12,-60),'up');assert.equal(swipeDirection(0,0),null);assert.equal(swipeDirection(15,-20),null)});

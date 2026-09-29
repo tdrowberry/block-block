@@ -1,4 +1,5 @@
 import {levels,roll,cells,supported,won,swipeDirection,sizeOf,activate} from './logic.js';
+import {projectUnits,cameraDepth} from './camera.js';
 import {scoreKey,cleanScores,unlockedThrough,canPlay,recordWin} from './progress.js';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
 let levelIndex=0,state={x:1,z:1,o:'u'},history=[],animation=null,phase='menu',screen='levels',width=0,height=0,scale=40,origin=[0,0],sound=false,audio,touch=null;
@@ -50,15 +51,15 @@ canvas.addEventListener('pointerup',e=>{if(!touch||touch.id!==e.pointerId)return
 for(const event of ['pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{if(touch?.id===e.pointerId)touch=null});
 function resize(){
  if(screen!=='play')return;const r=canvas.getBoundingClientRect();width=r.width;height=r.height;const ratio=Math.min(devicePixelRatio||1,2);canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
- const points=[];levels[levelIndex].map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b')for(const dx of [-.5,.5])for(const dz of [-.5,.5])points.push([(x+dx-z-dz)*.82,(x+dx+z+dz)*.4])}));
- const minX=Math.min(...points.map(p=>p[0])),maxX=Math.max(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1]))-2.85,maxY=Math.max(...points.map(p=>p[1]))+.3;
+ const points=[];levels[levelIndex].map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b')for(const dx of [-.5,.5])for(const dz of [-.5,.5])points.push(projectUnits([x+dx,0,z+dz]))}));
+ const minX=Math.min(...points.map(p=>p[0])),maxX=Math.max(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1]))+projectUnits([0,3,0])[1],maxY=Math.max(...points.map(p=>p[1]))+.3;
  const landscape=height<350;scale=Math.max(1,Math.min((width-28)/(maxX-minX),(height-(landscape?115:80))/(maxY-minY)));
  origin=[width/2-(minX+maxX)*scale/2,(height-(landscape?50:0))/2+15-(minY+maxY)*scale/2];
 }
 window.addEventListener('resize',resize);new ResizeObserver(resize).observe(canvas);
 let installPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('install').hidden=false});$('install').onclick=async()=>{if(!installPrompt)return;await installPrompt.prompt();installPrompt=null;$('install').hidden=true};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-function project([x,y,z]){return[origin[0]+(x-z)*scale*.82,origin[1]+(x+z)*scale*.4-y*scale*.95]}
+function project(point){const[x,y]=projectUnits(point);return[origin[0]+x*scale,origin[1]+y*scale]}
 function polygon(points,fill,stroke){ctx.beginPath();points.forEach((v,i)=>{const p=project(v);i?ctx.lineTo(...p):ctx.moveTo(...p)});ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
 function specialTile(x,z,time){
  const l=levels[levelIndex],isBridge=l.map[z][x]==='b';
@@ -77,9 +78,9 @@ function completeLanding(time){
 function tile(x,z,goal,time){const a=x-.47,b=x+.47,c=z-.47,d=z+.47,depth=-.23;polygon([[a,0,d],[b,0,d],[b,depth,d],[a,depth,d]],'#293f35','#20352c');polygon([[b,0,c],[b,0,d],[b,depth,d],[b,depth,c]],'#22392e','#20352c');if(goal){polygon([[a,0,c],[b,0,c],[b,0,d],[a,0,d]],'#a7c87f','#d0ed9d');polygon([[a+.09,.005,c+.09],[b-.09,.005,c+.09],[b-.09,.005,d-.09],[a+.09,.005,d-.09]],'#0a1914');ctx.save();ctx.shadowColor='#c8ec8e';ctx.shadowBlur=12+4*Math.sin(time/600);polygon([[a+.025,.015,c+.025],[b-.025,.015,c+.025],[b-.025,.015,d-.025],[a+.025,.015,d-.025]],null,'#d0ed9d');ctx.restore()}else{const shade=(x*7+z*13)%4;polygon([[a,0,c],[b,0,c],[b,0,d],[a,0,d]],['#55745d','#5a7961','#526f58','#5d7b62'][shade],'#82987855');}}
 function vertices(s){const n=sizeOf(s),w=s.o==='x'?n:1,h=s.o==='u'?n:1,d=s.o==='z'?n:1;return [[0,0,0],[w,0,0],[w,0,d],[0,0,d],[0,h,0],[w,h,0],[w,h,d],[0,h,d]].map(([x,y,z])=>[s.x-.5+(x===0?.055:x-.055),y===0?.025:y-.025,s.z-.5+(z===0?.055:z-.055)])}
 function transformed(time){if(!animation)return vertices(state);const a=animation,t=Math.min(1,(time-a.start)/a.duration);if(a.kind==='teleport')return vertices(t<.5?a.from:a.to);if(a.kind==='morph'){const from=vertices(a.from),to=vertices(a.to),e=t*t*(3-2*t);return from.map((v,i)=>v.map((c,j)=>c+(to[i][j]-c)*e))}if(a.kind==='roll'){const eased=t*t*(3-2*t),v=vertices(a.from),s=a.from,w=s.o==='x'?sizeOf(s):1,d=s.o==='z'?sizeOf(s):1;const horizontal=a.dir==='left'||a.dir==='right',pivot=horizontal?(a.dir==='right'?s.x+w-.5:s.x-.5):(a.dir==='down'?s.z+d-.5:s.z-.5),angle=eased*Math.PI/2*(a.dir==='right'||a.dir==='up'?-1:1),co=Math.cos(angle),si=Math.sin(angle);return v.map(([x,y,z])=>{if(horizontal){const q=x-pivot;return[pivot+q*co-y*si,q*si+y*co,z]}const q=z-pivot;return[x,y*co-q*si,pivot+y*si+q*co]})}return vertices(state).map(([x,y,z])=>[x,y-t*t*(a.kind==='win'?3:7),z])}
-function drawBlock(v,alpha=1){const faces=[[0,3,2,1],[0,1,5,4],[3,0,4,7],[1,2,6,5],[2,3,7,6],[4,5,6,7]],colors=['#6c8b48','#b1cb77','#93af63','#b4ce7f','#94b466','#e1f3ae'];const ordered=faces.map((f,i)=>({f,i,depth:f.reduce((sum,j)=>sum+v[j][0]+v[j][2]+v[j][1]*1.5,0)/4})).sort((a,b)=>a.depth-b.depth);ctx.save();ctx.globalAlpha=alpha;for(const {f,i}of ordered)polygon(f.map(j=>v[j]),colors[i],'#f0ffbd55');ctx.restore()}
+function drawBlock(v,alpha=1){const faces=[[0,3,2,1],[0,1,5,4],[3,0,4,7],[1,2,6,5],[2,3,7,6],[4,5,6,7]],colors=['#6c8b48','#b1cb77','#93af63','#b4ce7f','#94b466','#e1f3ae'];const ordered=faces.map((f,i)=>({f,i,depth:f.reduce((sum,j)=>sum+cameraDepth(v[j]),0)/4})).sort((a,b)=>a.depth-b.depth);ctx.save();ctx.globalAlpha=alpha;for(const {f,i}of ordered)polygon(f.map(j=>v[j]),colors[i],'#f0ffbd55');ctx.restore()}
 function frame(time){if(screen!=='play'||$('help-dialog').open){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,'#263d30');bg.addColorStop(1,'#14241f');ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle='#c3d9a30c';for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
- const l=levels[levelIndex],tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b')tiles.push([x,z])}));tiles.sort((a,b)=>a[0]+a[1]-b[0]-b[1]);
+ const l=levels[levelIndex],tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b')tiles.push([x,z])}));tiles.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  ctx.save();ctx.filter='blur(15px)';for(const[x,z]of tiles)polygon([[x-.5,-.65,z-.5],[x+.5,-.65,z-.5],[x+.5,-.65,z+.5],[x-.5,-.65,z+.5]],'#00000030');ctx.restore();
  const dropping=animation&&(animation.kind==='fall'||animation.kind==='win');if(dropping)drawBlock(transformed(time),Math.max(0,1-(time-animation.start)/animation.duration));
  for(const[x,z]of tiles)specialTile(x,z,time);
@@ -98,6 +99,7 @@ function frame(time){if(screen!=='play'||$('help-dialog').open){requestAnimation
  }else if(a.kind==='morph'||a.kind==='teleport')completeLanding(time);else finish(a.kind==='win')}
  requestAnimationFrame(frame)}
 showLevels();requestAnimationFrame(frame);
+
 
 
 
