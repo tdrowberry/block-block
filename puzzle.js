@@ -1,7 +1,7 @@
 export const sizeOf=s=>s.n??2;
 export function roll(s,dir){let{x,z,o}=s;const n=sizeOf(s);if(n===1)return{...s,x:x+(dir==='right'?1:dir==='left'?-1:0),z:z+(dir==='down'?1:dir==='up'?-1:0),o:'u'};if(dir==='right'){x+=o==='x'?n:1;if(o!=='z')o=o==='u'?'x':'u'}if(dir==='left'){x-=o==='u'?n:1;if(o!=='z')o=o==='u'?'x':'u'}if(dir==='down'){z+=o==='z'?n:1;if(o!=='x')o=o==='u'?'z':'u'}if(dir==='up'){z-=o==='u'?n:1;if(o!=='x')o=o==='u'?'z':'u'}return{...s,x,z,o}}
 export function cells(s){return Array.from({length:s.o==='u'?1:sizeOf(s)},(_,i)=>[s.x+(s.o==='x'?i:0),s.z+(s.o==='z'?i:0)])}
-export function supported(level,s){return cells(s).every(([x,z])=>level.map[z]?.[x]==='1'||(s.open&&level.map[z]?.[x]==='b'))}
+export function supported(level,s){return cells(s).every(([x,z])=>{const tile=level.map[z]?.[x];return tile==='1'||(s.open&&tile==='b')||(tile==='f'&&(sizeOf(s)===1||s.o!=='u'))})}
 export function won(level,s){return sizeOf(s)===2&&s.o==='u'&&s.x===level.goal[0]&&s.z===level.goal[1]}
 export function activate(level,previous,landed){
   const before=new Set(cells(previous).map(c=>c.join(',')));

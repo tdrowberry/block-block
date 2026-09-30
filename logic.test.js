@@ -3,6 +3,24 @@ import './progress.test.js';
 import './camera.test.js';
 import assert from 'node:assert/strict';
 import {levels,roll,cells,supported,won,solve,swipeDirection,step,activate,sizeOf} from './logic.js';
+
+test('fragile tiles support cubes and lying blocks but reject tall upright blocks',()=>{
+ const l={map:['ffff']};
+ for(const n of [1,2,3]){
+  assert.equal(supported(l,{x:0,z:0,o:'u',n}),n===1);
+  assert.equal(supported(l,{x:0,z:0,o:'x',n}),true);
+ }
+ assert.equal(step({map:['111f']},{x:1,z:0,o:'x'},'right'),null);
+});
+test('fourteen added levels have verified pars and introduce fragile tiles at 41',()=>{
+ assert.equal(levels.length,50);
+ assert.ok(levels.slice(0,40).every(l=>l.map.every(r=>!r.includes('f'))));
+ assert.ok(levels[40].map.some(r=>r.includes('f')));
+ for(const l of levels.slice(36))assert.equal(solve(l)?.length,l.par);
+ for(const chapter of [levels.slice(36,40),levels.slice(40)]){
+  for(let i=1;i<chapter.length;i++)assert.ok(chapter[i].par>chapter[i-1].par);
+ }
+});
 test('swipes follow the dominant direction and ignore taps or small finger movement',()=>{assert.equal(swipeDirection(60,12),'right');assert.equal(swipeDirection(-60,12),'left');assert.equal(swipeDirection(12,60),'down');assert.equal(swipeDirection(12,-60),'up');assert.equal(swipeDirection(0,0),null);assert.equal(swipeDirection(15,-20),null)});
 test('upright block tips across two cells then stands after three cells',()=>{const a=roll({x:0,z:0,o:'u'},'right');assert.deepEqual(cells(a),[[1,0],[2,0]]);assert.deepEqual(roll(a,'right'),{x:3,z:0,o:'u'})});
 test('every move is reversed by its opposite in every orientation',()=>{for(const o of ['u','x','z'])for(const[a,b]of [['up','down'],['left','right'],['down','up'],['right','left']]){const s={x:3,z:3,o};assert.deepEqual(roll(roll(s,a),b),s)}});
@@ -10,7 +28,7 @@ test('a single unsupported half causes a fall',()=>{assert.equal(supported({map:
 test('goal requires standing upright',()=>{const l={goal:[1,1]};assert.equal(won(l,{x:1,z:1,o:'x'}),false);assert.equal(won(l,{x:1,z:1,o:'u'}),true)});
 for(const level of levels)test(`${level.name} has a valid route`,()=>{let s={x:level.start[0],z:level.start[1],o:'u'};assert.ok(supported(level,s));const path=solve(level);assert.ok(path?.length,'Level must be solvable');for(const d of path){s=step(level,s,d);assert.ok(s);assert.ok(supported(level,s))}assert.ok(won(level,s));console.log(`${level.name}: ${path.length} moves`)});
 test('ten new power levels have strictly increasing verified shortest solutions',()=>{
-  assert.equal(levels.length,36);
+  assert.equal(levels.length,50);
   let previous=0;
   for(const level of levels.slice(16,26)){
     const shortest=solve(level).length;
@@ -45,8 +63,17 @@ test('only a normal-size upright block can escape',()=>{for(const n of [1,3])ass
 test('milestone powers appear at levels 11 and 21 and are optional in intervening designs',()=>{
  assert.ok(levels[10].pads.some(p=>p.type==='grow'));
  assert.ok(levels[20].pads.some(p=>p.type==='bridge'));
- assert.ok(levels.slice(11,16).every(l=>!l.pads));
+ assert.deepEqual(levels.slice(11,16).map(l=>Boolean(l.pads)),[true,false,true,false,false]);
  assert.ok(levels.slice(0,20).every(l=>!l.pads?.some(p=>p.type==='bridge')));
+});
+test('most levels after ten feature a power and midchapter powered routes activate it',()=>{
+ const later=levels.slice(10),powered=later.filter(l=>l.pads?.length||l.map.some(r=>r.includes('f')));
+ assert.ok(powered.length/later.length>=.85);
+ for(const index of [11,13]){
+   const level=levels[index],path=solve(level);let state={x:level.start[0],z:level.start[1],o:'u'},sizes=new Set([2]);
+   for(const direction of path){state=step(level,state,direction);sizes.add(sizeOf(state))}
+   assert.ok(index===11?sizes.has(3):sizes.has(1));assert.equal(sizeOf(state),2);
+ }
 });
 test('new levels require transformations, and bridge levels require a switch',()=>{
  for(const l of levels.slice(16,26)){
@@ -70,7 +97,7 @@ test('portal letters stay paired and returning requires leaving first',()=>{
 });
 test('teleports begin at level 31 and are essential to crossing the islands',()=>{
  assert.ok(levels.slice(0,30).every(l=>!l.pads?.some(p=>p.type==='teleport')));
- for(const l of levels.slice(30)){
+ for(const l of levels.slice(30,36)){
    assert.equal(solve(l).length,l.par);
    assert.equal(solve({...l,pads:l.pads.filter(p=>p.type!=='teleport')}),null);
    const pairs=new Map();for(const p of l.pads.filter(p=>p.type==='teleport'))pairs.set(p.pair,(pairs.get(p.pair)??0)+1);
@@ -78,5 +105,5 @@ test('teleports begin at level 31 and are essential to crossing the islands',()=
  }
 });
 test('new challenges increase within each chapter, with a short teleport introduction',()=>{
- for(const chapter of [levels.slice(26,30),levels.slice(30)]){let previous=0;for(const l of chapter){assert.equal(solve(l).length,l.par);assert.ok(l.par>previous);previous=l.par}}
+ for(const chapter of [levels.slice(26,30),levels.slice(30,36)]){let previous=0;for(const l of chapter){assert.equal(solve(l).length,l.par);assert.ok(l.par>previous);previous=l.par}}
 });

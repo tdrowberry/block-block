@@ -20,7 +20,7 @@ Levels 7–16 add irregular islands, holes, narrow crossings, and orientation pu
 
 - Levels 1–10: classic rolling.
 - Level 11 introduces size pads: **↑3** grows to three, **↓1** shrinks to one, and **=2** restores the normal two-square size.
-- Level 21 introduces **⏻** bridge switches: touch one to toggle all cyan dotted bridge tiles. Later puzzles may use either power, both, or neither. Levels 12–16 deliberately remain classic puzzles.
+- Levels 12 and 14 reuse size pads in new ways while levels 13, 15, and 16 provide classic rolling breaks. Level 21 introduces **⏻** bridge switches: touch one to toggle all cyan dotted bridge tiles. Later puzzles may use either power, both, or neither.
 - Levels 17–26 mix shapes and, from 21 onward, bridges. Their shortest routes increase from 26 to 62 moves. These lengths include transformations: new rules create complexity beyond move count alone.
 
 The entire block must land safely before a pad activates. Any newly touching part activates it, then the block stands upright on that pad at its new size. If more than one pad is touched, the first in the level's pad list wins; shipped pads are spaced apart to avoid that ambiguity. Pads activate again after leaving and returning. A cube moves one square per roll; long blocks occupy two or three squares when lying down. The exit accepts only an upright size-two block.
@@ -29,9 +29,13 @@ Closed bridges are holes. Open bridges support any size. Closing a bridge undern
 
 Level 31 introduces **◎A / ◎B teleport pairs**. Stand upright at size two or three on a pad to appear on the matching letter on another platform. Cubes and lying blocks do not activate portals. Teleportation preserves size and bridge state, costs no extra move, and does not immediately trigger the arrival pad. Leave and return upright to travel back. Restart returns you to the original platform.
 
-Levels 27–30 add size-and-bridge challenges with minimum routes of 42, 46, 50, and 54 moves. Level 31 is a four-move teleport introduction; levels 32–36 increase from 28 to 52 moves and require teleports to cross separated platforms. Later puzzles combine multiple portal pairs with size changes and bridge switches. The first 26 boards and their scores are unchanged.
+Levels 27–30 add size-and-bridge challenges with minimum routes of 42, 46, 50, and 54 moves. Level 31 is a four-move teleport introduction; levels 32–36 increase from 28 to 52 moves and require teleports to cross separated platforms. Later puzzles combine multiple portal pairs with size changes and bridge switches. Existing saved progress is retained.
 
-Level data uses optional `pads` and `b` bridge cells, so future 10-level chapters can introduce a mechanic without forcing it into every later board. The milestone schedule is size pads at 11, bridges at 21, teleports at 31, and the next new power at 41 when that chapter is designed. Teleport pads use `type: 'teleport'` with a shared `pair` letter; every pair must have exactly two endpoints.
+Level data uses optional `pads`, `b` bridge cells, and `f` fragile cells, so future 10-level chapters can introduce a mechanic without forcing it into every later board. The milestone schedule is size pads at 11, bridges at 21, teleports at 31, and fragile tiles at 41. Teleport pads use `type: 'teleport'` with a shared `pair` letter; every pair must have exactly two endpoints.
+
+The campaign now contains 50 levels. After level 10, 36 of 40 levels use at least one special mechanic. A few classic boards remain between mechanic-heavy puzzles for pacing. Power pads use animated, color-coded symbols and glows: amber expansion marks grow to three, violet inward marks shrink to one, lime balance marks restore size two, cyan switches control bridges, and swirling magenta or blue rings identify teleport pairs.
+
+Levels 37–40 continue the portal chapter with shortest solutions of 44, 48, 52, and 56 moves. Level 41 introduces amber cracked tiles in an eight-move lesson: cubes and lying blocks can cross, but an upright size-two or size-three block falls through. Levels 42–50 increase from 20 to 52 moves, combining fragile tiles with previous powers; level 44 is a classic rolling break. Each board has a solver-verified route and par. Existing players who cleared level 36 can continue straight into level 37.
 
 ## Verify
 
