@@ -19,7 +19,7 @@ Levels 7–16 add irregular islands, holes, narrow crossings, and orientation pu
 ## Powers and milestones
 
 - Levels 1–10: classic rolling.
-- Level 11 introduces size pads: **↑3** grows to three, **↓1** shrinks to one, and **=2** restores the normal two-square size.
+- Level 11 introduces size pads: **three squares** grows to three, **one square** shrinks to one, and **two squares** restores the normal two-square size.
 - Levels 12 and 14 reuse size pads in new ways while levels 13, 15, and 16 provide classic rolling breaks. Level 21 introduces **⏻** bridge switches: touch one to toggle all cyan dotted bridge tiles. Later puzzles may use either power, both, or neither.
 - Levels 17–26 mix shapes and, from 21 onward, bridges. Their shortest routes increase from 26 to 62 moves. These lengths include transformations: new rules create complexity beyond move count alone.
 
@@ -33,7 +33,7 @@ Levels 27–30 add size-and-bridge challenges with minimum routes of 42, 46, 50,
 
 Level data uses optional `pads`, `b` bridge cells, and `f` fragile cells, so future 10-level chapters can introduce a mechanic without forcing it into every later board. The milestone schedule is size pads at 11, bridges at 21, teleports at 31, and fragile tiles at 41. Teleport pads use `type: 'teleport'` with a shared `pair` letter; every pair must have exactly two endpoints.
 
-The campaign now contains 50 levels. After level 10, 36 of 40 levels use at least one special mechanic. A few classic boards remain between mechanic-heavy puzzles for pacing. Power pads use animated, color-coded symbols and glows: amber expansion marks grow to three, violet inward marks shrink to one, lime balance marks restore size two, cyan switches control bridges, and swirling magenta or blue rings identify teleport pairs.
+The campaign now contains 50 levels. After level 10, 36 of 40 levels use at least one special mechanic. A few classic boards remain between mechanic-heavy puzzles for pacing. Power pads use animated, color-coded symbols and glows: three amber squares grow to three, one centered violet square shrinks to one, two lime squares restore size two, cyan switches control bridges, and swirling magenta or blue rings identify teleport pairs.
 
 Levels 37–40 continue the portal chapter with shortest solutions of 44, 48, 52, and 56 moves. Level 41 introduces amber cracked tiles in an eight-move lesson: cubes and lying blocks can cross, but an upright size-two or size-three block falls through. Levels 42–50 increase from 20 to 52 moves, combining fragile tiles with previous powers; level 44 is a classic rolling break. Each board has a solver-verified route and par. Existing players who cleared level 36 can continue straight into level 37.
 
@@ -48,3 +48,7 @@ The app starts on level select. Completed, available, and locked levels have dis
 A web app manifest, 192/512-pixel app icons, and an offline service worker are included. In a supporting browser, the Install app button appears when installation is offered. Offline play is available after the app assets have been cached during an online visit. Progress is local to the browser/device; clearing site data removes it.
 
 This is an installable web app foundation, not a signed Android release or a Google Play listing. Android packaging, signing, and store submission remain separate release work.
+
+Completion ratings compare your moves with the solver-verified minimum shown in the HUD and results. Exact minimum earns Absolutely Perfect and a permanent perfect star on level select; 1–10 extra moves earns Almost perfect, 11–20 earns Good escape, and larger detours get rotating playful messages. Replay directly from the result screen to improve your best. Every escape still unlocks the next level regardless of rating.
+
+Use the gear icon on level select or during play to choose Swipe (default, arrows hidden) or Arrow buttons (swipes disabled). The choice persists on this device. Keyboard controls work in either mode. The HUD shows only minimum, current, and best moves; block dimensions and bridge-state labels are omitted.

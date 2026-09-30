@@ -1,6 +1,7 @@
 import test from 'node:test';
 import './progress.test.js';
 import './camera.test.js';
+import './ratings.test.js';
 import assert from 'node:assert/strict';
 import {levels,roll,cells,supported,won,solve,swipeDirection,step,activate,sizeOf} from './logic.js';
 
