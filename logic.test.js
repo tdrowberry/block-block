@@ -2,8 +2,20 @@ import test from 'node:test';
 import './progress.test.js';
 import './camera.test.js';
 import './ratings.test.js';
+import './mindbender.test.js';
 import assert from 'node:assert/strict';
 import {levels,roll,cells,supported,won,solve,swipeDirection,step,activate,sizeOf} from './logic.js';
+
+test('expert chapter increases from 64 to 82 moves and uses both altered sizes',()=>{
+ assert.equal(levels.slice(50,60).length,10);
+ for(const [i,l] of levels.slice(50,60).entries()){
+  const path=solve(l);assert.equal(path.length,64+i*2);assert.equal(path.length,l.par);
+  let s={x:l.start[0],z:l.start[1],o:'u'};const sizes=new Set([2]);
+  for(const dir of path){s=step(l,s,dir);sizes.add(sizeOf(s))}
+  assert.deepEqual([...sizes].sort(),[1,2,3]);assert.ok(won(l,s));
+ }
+ assert.equal(new Set(levels.map(l=>JSON.stringify(l.map))).size,levels.length);
+});
 
 test('fragile tiles support cubes and lying blocks but reject tall upright blocks',()=>{
  const l={map:['ffff']};
@@ -14,11 +26,11 @@ test('fragile tiles support cubes and lying blocks but reject tall upright block
  assert.equal(step({map:['111f']},{x:1,z:0,o:'x'},'right'),null);
 });
 test('fourteen added levels have verified pars and introduce fragile tiles at 41',()=>{
- assert.equal(levels.length,50);
+ assert.equal(levels.length,70);
  assert.ok(levels.slice(0,40).every(l=>l.map.every(r=>!r.includes('f'))));
  assert.ok(levels[40].map.some(r=>r.includes('f')));
- for(const l of levels.slice(36))assert.equal(solve(l)?.length,l.par);
- for(const chapter of [levels.slice(36,40),levels.slice(40)]){
+ for(const l of levels.slice(36,50))assert.equal(solve(l)?.length,l.par);
+ for(const chapter of [levels.slice(36,40),levels.slice(40,50)]){
   for(let i=1;i<chapter.length;i++)assert.ok(chapter[i].par>chapter[i-1].par);
  }
 });
@@ -29,7 +41,7 @@ test('a single unsupported half causes a fall',()=>{assert.equal(supported({map:
 test('goal requires standing upright',()=>{const l={goal:[1,1]};assert.equal(won(l,{x:1,z:1,o:'x'}),false);assert.equal(won(l,{x:1,z:1,o:'u'}),true)});
 for(const level of levels)test(`${level.name} has a valid route`,()=>{let s={x:level.start[0],z:level.start[1],o:'u'};assert.ok(supported(level,s));const path=solve(level);assert.ok(path?.length,'Level must be solvable');for(const d of path){s=step(level,s,d);assert.ok(s);assert.ok(supported(level,s))}assert.ok(won(level,s));console.log(`${level.name}: ${path.length} moves`)});
 test('ten new power levels have strictly increasing verified shortest solutions',()=>{
-  assert.equal(levels.length,50);
+  assert.equal(levels.length,70);
   let previous=0;
   for(const level of levels.slice(16,26)){
     const shortest=solve(level).length;

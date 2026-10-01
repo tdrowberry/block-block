@@ -29,7 +29,7 @@ function confetti(time){
  bits=bits.filter(b=>b.life>0&&b.y<innerHeight+30);if(!bits.length)cctx.clearRect(0,0,cv.width,cv.height);
 }
 if($('world'))$('world').onclick=hideWorld;
-const chapterNames=['01 · FIND YOUR FOOTING','02 · CHANGE YOUR SHAPE','03 · BUILD YOUR BRIDGES','04 · STEP THROUGH SPACE','05 · TREAD LIGHTLY'];
+const chapterNames=['01 · FIND YOUR FOOTING','02 · CHANGE YOUR SHAPE','03 · BUILD YOUR BRIDGES','04 · STEP THROUGH SPACE','05 · TREAD LIGHTLY','06 · MASTER THE ESCAPE','07 · LOOK AGAIN'];
 function renderLevels(){
  const frontier=unlockedThrough(bests,levels.length);$('levels').replaceChildren();
  for(let start=0;start<levels.length;start+=10){

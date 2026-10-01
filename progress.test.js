@@ -1,6 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {cleanScores,canPlay,recordWin,unlockedThrough,scoreKey} from './progress.js';
 
+test('fifty completed levels unlock level 51 and expert escapes continue unlocking',()=>{
+ let scores={};for(let i=0;i<50;i++)scores=recordWin(scores,i,100,50);
+ scores=cleanScores(scores,60);assert.equal(unlockedThrough(scores,60),50);
+ assert.equal(canPlay(scores,51,60),false);
+ for(let i=50;i<60;i++){assert.ok(canPlay(scores,i,60));scores=recordWin(scores,i,100,60)}
+ assert.equal(Object.keys(scores).length,60);assert.equal(unlockedThrough(scores,60),59);
+});
+
 test('existing campaign completion unlocks level 37 without losing scores',()=>{
  let p={};for(let i=0;i<36;i++)p=recordWin(p,i,60,36);
  const migrated=cleanScores(p,50);assert.deepEqual(migrated,p);
