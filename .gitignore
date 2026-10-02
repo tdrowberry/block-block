@@ -9,3 +9,12 @@ coverage/
 Thumbs.db
 .codex/
 .agents/
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/app/build-*/
+android/local.properties
+android/release.properties
+*.jks
+*.keystore

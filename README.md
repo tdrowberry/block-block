@@ -1,5 +1,7 @@
 # Block Block
 
+Created by **Lalao Lemur**. © 2026 Lalao Lemur. All rights reserved.
+
 A 3D rolling-block puzzle. Tip a 1 × 1 × 2 block across floating tiles and land standing upright on the glowing opening. Both halves must stay supported.
 
 ## Play
@@ -47,7 +49,7 @@ The app starts on level select. Completed, available, and locked levels have dis
 
 A web app manifest, 192/512-pixel app icons, and an offline service worker are included. In a supporting browser, the Install app button appears when installation is offered. Offline play is available after the app assets have been cached during an online visit. Progress is local to the browser/device; clearing site data removes it.
 
-This is an installable web app foundation, not a signed Android release or a Google Play listing. Android packaging, signing, and store submission remain separate release work.
+The `android` project packages the game as an offline Android app with optional Google Play Tip purchases and AdMob rewarded ads. See [PLAY-RELEASE.md](PLAY-RELEASE.md) for build instructions and the owner configuration still required before publishing. Debug builds use test ads; release builds require real account configuration and signing.
 
 Completion ratings compare your moves with the solver-verified minimum shown in the HUD and results. Exact minimum earns Absolutely Perfect and a permanent perfect star on level select; 1–10 extra moves earns Almost perfect, 11–20 earns Good escape, and larger detours get rotating playful messages. Replay directly from the result screen to improve your best. Every escape still unlocks the next level regardless of rating.
 
@@ -56,3 +58,7 @@ Use the gear icon on level select or during play to choose Swipe (default, arrow
 Levels 51–60 form the expert chapter, with verified minimum routes of 64, 66, 68, 70, 72, 74, 76, 78, 80, and 82 moves. Each shortest route uses both size one and size three, with bridges or portals complicating the journey. All existing boards and saved progress are preserved; completing level 50 unlocks level 51.
 
 Levels 61–70 form Look Again: compact 9×9 mindbenders with verified solutions of 19, 19, 22, 24, 23, 32, 21, 43, 34, and 28 moves. These focus on deceptive nearby exits, movement away from the goal, repeated visits in different orientations or sizes, bridge toggling, and portal sequencing instead of increasing move counts. Human difficulty is subjective; the solver verifies solvability and mechanic usage, not how difficult a person will find them. Existing levels and progress are retained.
+
+## Optional Tips
+
+The Tip button previews up to 20 moves from the current state with numbered shadow footprints and a transparent block. Routes account for size pads, bridges, portals, and fragile tiles. Following the route reduces the remaining preview; taking another route, restarting, or leaving the level clears it. An unsolvable position is detected before spending. The Android app supports a five-credit consumable (`tips_5`) at the Play Console price or one credit per completed rewarded ad. Credits are local to the device; no fake ad or payment unlock ships in the browser.

@@ -1,0 +1,71 @@
+plugins { id 'com.android.application' }
+if(project.hasProperty('buildOutput')) layout.buildDirectory.set(file(project.property('buildOutput')))
+def releaseConfig = new Properties()
+def configFile = rootProject.file('release.properties')
+if (configFile.exists()) configFile.withInputStream { releaseConfig.load(it) }
+def quote = { value -> '"' + value.toString().replace('\\','\\\\').replace('"','\\"') + '"' }
+android {
+ namespace 'com.lalaolemur.blockblock'
+ compileSdk 36
+ defaultConfig {
+  applicationId releaseConfig.getProperty('applicationId','com.lalaolemur.blockblock')
+  minSdk 24
+  targetSdk 36
+  versionCode 1
+  versionName '1.0.0'
+  buildConfigField 'String','TIP_PRODUCT','"tips_5"'
+ }
+ buildFeatures { buildConfig true }
+ buildTypes {
+  debug {
+   applicationIdSuffix '.debug'
+   manifestPlaceholders = [admobAppId:'ca-app-pub-3940256099942544~3347511713']
+   buildConfigField 'String','REWARDED_ID','"ca-app-pub-3940256099942544/5224354917"'
+   buildConfigField 'String','BILLING_KEY',quote(releaseConfig.getProperty('billingPublicKey',''))
+  }
+  release {
+   manifestPlaceholders = [admobAppId:releaseConfig.getProperty('admobAppId','NOT_CONFIGURED')]
+   buildConfigField 'String','REWARDED_ID',quote(releaseConfig.getProperty('rewardedAdUnitId',''))
+   buildConfigField 'String','BILLING_KEY',quote(releaseConfig.getProperty('billingPublicKey',''))
+   minifyEnabled false
+  }
+ }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+tasks.register('copyGame', Copy) {
+ from(rootProject.projectDir.parentFile) {
+  include '*.html','*.css','*.js','icon*.png','icon.svg','manifest.webmanifest'
+  exclude '*.test.js','server.js','sw.js'
+ }
+ into layout.buildDirectory.dir('generated/gameAssets/game')
+ filesMatching('privacy.html') {
+  filter { line ->
+   if(releaseConfig.getProperty('supportEmail') && releaseConfig.getProperty('privacyPolicyUrl')) {
+    line = line.replace('<p><strong>Pre-release notice:</strong> Android ads and purchases are being prepared. This policy must have a support contact and public hosted URL before the store release.</p>','')
+    line = line.replace("Lalao Lemur's support contact will be added before public release.", 'Contact Lalao Lemur: ' + releaseConfig.supportEmail.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;'))
+   }
+   line
+  }
+ }
+}
+android.sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/gameAssets').get().asFile
+tasks.named('preBuild').configure { dependsOn 'copyGame' }
+tasks.register('validateRelease') {
+ doLast {
+  ['applicationId','admobAppId','rewardedAdUnitId','billingPublicKey','privacyPolicyUrl','supportEmail','targetAudience'].each { key ->
+   if(!releaseConfig.getProperty(key)?.trim()) throw new GradleException("Set ${key} in android/release.properties before release.")
+  }
+  if(releaseConfig.admobAppId.contains('3940256099942544') || releaseConfig.rewardedAdUnitId.contains('3940256099942544')) throw new GradleException('Release must not use test ad IDs.')
+  if(releaseConfig.targetAudience != '13+') throw new GradleException('This build supports a confirmed 13+ audience only. Configure Families-compliant ads before targeting younger players.')
+ }
+}
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach { dependsOn 'validateRelease' }
+dependencies {
+ implementation 'androidx.activity:activity:1.10.1'
+ implementation 'androidx.webkit:webkit:1.14.0'
+ implementation 'com.google.android.gms:play-services-ads:25.5.0'
+ implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
+ implementation 'com.android.billingclient:billing:8.3.0'
+}
+
+

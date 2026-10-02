@@ -1,0 +1,10 @@
+# Copy to release.properties. Never commit signing keys or passwords.
+applicationId=com.lalaolemur.blockblock
+admobAppId=
+rewardedAdUnitId=
+# Public licensing key from Play Console (not a signing/private key).
+billingPublicKey=
+privacyPolicyUrl=
+supportEmail=
+# Confirm audience before release; a children-directed release needs Families configuration.
+targetAudience=

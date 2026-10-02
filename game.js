@@ -1,3 +1,6 @@
+import {planTip,advanceTip} from './tips.js';
+import {hasNativeStore,storeRequest} from './store.js';
+let activeTip=null,tipCandidate=null,tipBusy=false;
 import {levels,roll,cells,supported,won,swipeDirection,sizeOf,activate} from './logic.js';
 import {minimumMoves} from './minimum-moves.js';
 import {escapeRating,sassyEscapes} from './ratings.js';
@@ -42,19 +45,19 @@ function renderLevels(){
  const count=Object.keys(bests).length;$('progress-label').textContent=`${count} / ${levels.length} completed`;$('progress-percent').textContent=`${Math.round(count/levels.length*100)}%`;$('progress-bar').value=count;$('progress-bar').max=levels.length;
  $('continue').textContent=`${count===levels.length?'Replay':frontier===0?'Start':'Continue'} level ${String(frontier+1).padStart(2,'0')} ↗`;
 }
-function showLevels(){applyTheme(0);splashFor=-1;hideWorld();bits=[];screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();window.scrollTo(0,0)}
+function showLevels(){activeTip=null;applyTheme(0);splashFor=-1;hideWorld();bits=[];screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();window.scrollTo(0,0)}
 function tone(freq=160,duration=.08){if(!sound)return;try{audio??=new AudioContext();audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);gain.gain.setValueAtTime(.06,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+duration)}catch{}}
 function update(){ $('moves').textContent=String(history.length).padStart(2,'0');$('minimum').textContent=minimumMoves[levelIndex];$('best').textContent=bests[scoreKey(levelIndex)]??'—';canvas.setAttribute('aria-busy',String(Boolean(animation)));}
 function load(i,afterFall=false){
  if(!canPlay(bests,i,levels.length))return;
- levelIndex=i;applyTheme(i);state={x:levels[i].start[0],z:levels[i].start[1],o:'u'};history=[];animation=null;touch=null;phase='playing';screen='play';
+ activeTip=null;$('tip-progress').textContent='';levelIndex=i;applyTheme(i);state={x:levels[i].start[0],z:levels[i].start[1],o:'u'};history=[];animation=null;touch=null;phase='playing';screen='play';
  $('level-screen').hidden=true;$('play-screen').hidden=false;document.body.style.overflow='hidden';$('result').hidden=true;
  $('level-tag').textContent=`LEVEL ${String(i+1).padStart(2,'0')} / ${levels.length} · ${th.name.toUpperCase()}`;$('level-name').textContent=levels[i].name;
  $('status').textContent=(!afterFall&&i%5===0&&i>0?`New world: ${th.name}! `:'')+(afterFall?'New attempt. Keep the whole block on the tiles.':levels[i].description?levels[i].description:'Swipe to roll. Stand upright on the glowing exit.');
  update();resize();canvas.focus({preventScroll:true});
  hideWorld();if(!afterFall&&i>0&&i%5===0&&splashFor!==i)showWorld(i);
 }
-function move(dir){if(screen!=='play'||($('help-dialog').open||$('settings-dialog').open)||phase!=='playing'||animation)return;history.push({...state});animation={kind:'roll',from:{...state},to:roll(state,dir),dir,start:performance.now(),duration:reduced?60:190};tone();update()}
+function move(dir){if(screen!=='play'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)||phase!=='playing'||animation)return;history.push({...state});animation={kind:'roll',from:{...state},to:roll(state,dir),dir,start:performance.now(),duration:reduced?60:190};tone();update()}
 function finish(success){
  if(!success){tone(90,.2);load(levelIndex,true);return}
  phase='won';bests=recordWin(bests,levelIndex,history.length,levels.length);try{localStorage.setItem('block-block-best',JSON.stringify(bests))}catch{}
@@ -90,8 +93,8 @@ function openHelp(){helpOpenedAt=performance.now();touch=null;$('help-dialog').s
 $('how-to-play').onclick=openHelp;$('play-help').onclick=openHelp;$('close-help').onclick=()=> $('help-dialog').close();$('help-done').onclick=()=> $('help-dialog').close();
 $('help-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-helpOpenedAt});
 document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>move(b.dataset.dir));
-window.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||($('help-dialog').open||$('settings-dialog').open)||screen!=='play')return;const k=e.key.toLowerCase(),dir={arrowup:'up',arrowdown:'down',arrowleft:'left',arrowright:'right',w:'up',s:'down',a:'left',d:'right'}[k];if(dir){e.preventDefault();move(dir)}else if(k==='r'){load(levelIndex)}else if(k==='escape'){e.preventDefault();showLevels()}});
-canvas.addEventListener('pointerdown',e=>{if(controlMode!=='swipe'||!e.isPrimary||e.button!==0||screen!=='play'||phase!=='playing'||animation||($('help-dialog').open||$('settings-dialog').open))return;touch={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
+window.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)||screen!=='play')return;const k=e.key.toLowerCase(),dir={arrowup:'up',arrowdown:'down',arrowleft:'left',arrowright:'right',w:'up',s:'down',a:'left',d:'right'}[k];if(dir){e.preventDefault();move(dir)}else if(k==='r'){load(levelIndex)}else if(k==='escape'){e.preventDefault();showLevels()}});
+canvas.addEventListener('pointerdown',e=>{if(controlMode!=='swipe'||!e.isPrimary||e.button!==0||screen!=='play'||phase!=='playing'||animation||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open))return;touch={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointerup',e=>{if(controlMode!=='swipe'||!touch||touch.id!==e.pointerId)return;const dir=swipeDirection(e.clientX-touch.x,e.clientY-touch.y);touch=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(dir)move(dir)});
 for(const event of ['pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{if(touch?.id===e.pointerId)touch=null});
 function resize(){
@@ -103,7 +106,7 @@ function resize(){
 }
 window.addEventListener('resize',resize);new ResizeObserver(resize).observe(canvas);
 let installPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('install').hidden=false});$('install').onclick=async()=>{if(!installPrompt)return;await installPrompt.prompt();installPrompt=null;$('install').hidden=true};
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(!hasNativeStore()&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 function project(point){const[x,y]=projectUnits(point);return[origin[0]+x*scale,origin[1]+y*scale]}
 function polygon(points,fill,stroke,lw=1){ctx.beginPath();points.forEach((v,i)=>{const p=project(v);i?ctx.lineTo(...p):ctx.moveTo(...p)});ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.lineJoin='round';ctx.stroke()}}
 const powerColor=(pad,isBridge)=>({grow:'#ffb45e',shrink:'#bc9cff',normal:'#d8f38c',bridge:'#67e0ef',teleport:pad?.pair==='B'?'#78aaff':'#ff75d1'})[pad?.type]??(isBridge?'#67e0ef':'#d8f38c');
@@ -138,6 +141,8 @@ function specialTile(x,z,time){
  if(pad||isBridge){const color=powerColor(pad,isBridge),pulse=.5+.5*Math.sin(time/330+x*.8+z*.55);ctx.save();ctx.shadowColor=color;ctx.shadowBlur=12+10*pulse;polygon([[x-.40,.02,z-.40],[x+.40,.02,z-.40],[x+.40,.02,z+.40],[x-.40,.02,z+.40]],color+'26',color);ctx.restore();if(pad)drawPowerGlyph(x,z,pad,isBridge,time,color)}
 }
 function completeLanding(time){
+ if(activeTip){const previous=activeTip;activeTip=advanceTip(activeTip,state);$('tip-progress').textContent=activeTip?`${activeTip.steps.length} TIP MOVES LEFT`:previous.finishes&&won(levels[levelIndex],state)?'': 'Tip ended. Choose Tip for another preview.';}
+
  const l=levels[levelIndex];update();
  if(!supported(l,state)){phase='falling';$('status').textContent='Watch the edge…';animation={kind:'fall',start:time,duration:reduced?100:520}}
  else if(sizeOf(state)!==2&&cells(state).some(([x,z])=>x===l.goal[0]&&z===l.goal[1])){$('status').textContent='You have to escape as a size 2 block. Find the two-square symbol to return to normal.'}
@@ -147,11 +152,12 @@ function tile(x,z,goal,time){const a=x-.47,b=x+.47,c=z-.47,d=z+.47,depth=-.23;po
 function vertices(s){const n=sizeOf(s),w=s.o==='x'?n:1,h=s.o==='u'?n:1,d=s.o==='z'?n:1;return [[0,0,0],[w,0,0],[w,0,d],[0,0,d],[0,h,0],[w,h,0],[w,h,d],[0,h,d]].map(([x,y,z])=>[s.x-.5+(x===0?.055:x-.055),y===0?.025:y-.025,s.z-.5+(z===0?.055:z-.055)])}
 function transformed(time){if(!animation)return vertices(state);const a=animation,t=Math.min(1,(time-a.start)/a.duration);if(a.kind==='teleport')return vertices(t<.5?a.from:a.to);if(a.kind==='morph'){const from=vertices(a.from),to=vertices(a.to),e=t*t*(3-2*t);return from.map((v,i)=>v.map((c,j)=>c+(to[i][j]-c)*e))}if(a.kind==='roll'){const eased=t*t*(3-2*t),v=vertices(a.from),s=a.from,w=s.o==='x'?sizeOf(s):1,d=s.o==='z'?sizeOf(s):1;const horizontal=a.dir==='left'||a.dir==='right',pivot=horizontal?(a.dir==='right'?s.x+w-.5:s.x-.5):(a.dir==='down'?s.z+d-.5:s.z-.5),angle=eased*Math.PI/2*(a.dir==='right'||a.dir==='up'?-1:1),co=Math.cos(angle),si=Math.sin(angle);return v.map(([x,y,z])=>{if(horizontal){const q=x-pivot;return[pivot+q*co-y*si,q*si+y*co,z]}const q=z-pivot;return[x,y*co-q*si,pivot+y*si+q*co]})}return vertices(state).map(([x,y,z])=>[x,y-t*t*(a.kind==='win'?3:7),z])}
 function drawBlock(v,alpha=1){const faces=[[0,3,2,1],[0,1,5,4],[3,0,4,7],[1,2,6,5],[2,3,7,6],[4,5,6,7]],colors=[41,63,55,65,55,80].map(l=>`hsl(${th.a},${l>70?60:40}%,${l}%)`);const ordered=faces.map((f,i)=>({f,i,depth:f.reduce((sum,j)=>sum+cameraDepth(v[j]),0)/4})).sort((a,b)=>a.depth-b.depth);ctx.save();ctx.globalAlpha=alpha;for(const {f,i}of ordered)polygon(f.map(j=>v[j]),colors[i],`hsl(${th.a},100%,90%)`,Math.max(1,scale*.03));ctx.restore()}
-function frame(time){confetti(time);if(screen!=='play'||($('help-dialog').open||$('settings-dialog').open)){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,`hsl(${th.h},25%,19%)`);bg.addColorStop(1,`hsl(${th.h},30%,11%)`);ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=`hsla(${th.a},30%,75%,.05)`;for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
+function frame(time){confetti(time);if(screen!=='play'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,`hsl(${th.h},25%,19%)`);bg.addColorStop(1,`hsl(${th.h},30%,11%)`);ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=`hsla(${th.a},30%,75%,.05)`;for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
  const l=levels[levelIndex],tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b'||c==='f')tiles.push([x,z])}));tiles.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  ctx.save();ctx.filter='blur(15px)';for(const[x,z]of tiles)polygon([[x-.5,-.65,z-.5],[x+.5,-.65,z-.5],[x+.5,-.65,z+.5],[x-.5,-.65,z+.5]],'#00000030');ctx.restore();
  const dropping=animation&&(animation.kind==='fall'||animation.kind==='win');if(dropping)drawBlock(transformed(time),Math.max(0,1-(time-animation.start)/animation.duration));
  for(const[x,z]of tiles)specialTile(x,z,time);
+ drawTip(time);
  if(!dropping){for(const[x,z]of cells(state))polygon([[x-.42,.015,z-.42],[x+.42,.015,z-.42],[x+.42,.015,z+.42],[x-.42,.015,z+.42]],'#16251955');const opacity=animation?.kind==='teleport'?Math.abs(1-2*Math.min(1,(time-animation.start)/animation.duration)):1;drawBlock(transformed(time),opacity)}
  if(animation&&time-animation.start>=animation.duration){const a=animation;animation=null;if(a.kind==='roll'){
    state=a.to;
@@ -166,8 +172,41 @@ function frame(time){confetti(time);if(screen!=='play'||($('help-dialog').open||
    if(!animation)completeLanding(time);
  }else if(a.kind==='morph'||a.kind==='teleport')completeLanding(time);else finish(a.kind==='win')}
  requestAnimationFrame(frame)}
+let tipOpenedAt=0;
+function tipButtons(disabled){for(const id of ['tip-use','tip-ad','tip-buy','close-tip','tip-hide'])$(id).disabled=disabled}
+async function refreshTipStore(){
+ $('tip-hide').hidden=!activeTip;
+ if(!hasNativeStore()){$('tip-store-status').textContent='Tip purchases and rewarded ads are available in the Android app.';for(const id of ['tip-use','tip-ad','tip-buy'])$(id).disabled=true;return}
+ try{const info=await storeRequest('status');$('tip-balance').textContent=`${info.credits} Tips available`;$('tip-use').disabled=info.credits<1||!tipCandidate;$('tip-buy').textContent=info.price?`Buy 5 Tips · ${info.price}`:'Purchases unavailable';$('tip-buy').disabled=!info.price;$('tip-ad').disabled=!info.ads||!tipCandidate;$('tip-ad').textContent=info.testAds?'Watch a test ad · earn 1 Tip':'Watch an ad · earn 1 Tip'}catch(e){$('tip-store-status').textContent=e.message}
+}
+$('tip-button').onclick=async()=>{
+ if(phase!=='playing'||animation)return;
+ tipCandidate=planTip(levels[levelIndex],state);tipOpenedAt=performance.now();touch=null;
+ $('tip-store-status').textContent='';$('tip-description').textContent=tipCandidate?`Reveal the next ${tipCandidate.steps.length} moves${tipCandidate.finishes?' to the exit':''}. Follow the numbered shadow trail. A different move or restart clears it. One Tip unlocks this preview.`:'There is no route to the exit from this position. Restart this level before using a Tip. No credit will be spent.';
+ $('tip-dialog').showModal();await refreshTipStore();
+};
+$('close-tip').onclick=()=>{if(!tipBusy)$('tip-dialog').close()};
+$('tip-dialog').addEventListener('cancel',e=>{if(tipBusy)e.preventDefault()});
+$('tip-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-tipOpenedAt});
+$('tip-hide').onclick=()=>{activeTip=null;$('tip-progress').textContent='';$('tip-dialog').close()};
+async function tipAction(action){
+ if(tipBusy||action==='spend'&&!tipCandidate)return;
+ tipBusy=true;tipButtons(true);$('tip-store-status').textContent=action==='ad'?'Loading your rewarded ad…':action==='buy'?'Opening Google Play…':'Revealing your trail…';
+ try{const result=await storeRequest(action);if(action==='spend'&&result.spent){activeTip=tipCandidate;$('tip-progress').textContent=`${activeTip.steps.length} TIP MOVES LEFT`;$('tip-dialog').close()}else $('tip-store-status').textContent=result.message??'Your Tip balance has been updated.'}
+ catch(e){$('tip-store-status').textContent=e.message}
+ finally{tipBusy=false;tipButtons(false);await refreshTipStore()}
+}
+$('tip-use').onclick=()=>tipAction('spend');$('tip-ad').onclick=()=>tipAction('ad');$('tip-buy').onclick=()=>tipAction('buy');
+$('privacy-options').hidden=!hasNativeStore();$('privacy-options').onclick=async()=>{try{await storeRequest('privacy')}catch(e){$('status').textContent=e.message}};
+function drawTip(time){
+ if(!activeTip?.steps.length)return;
+ ctx.save();ctx.strokeStyle='#b4ddff';ctx.fillStyle='#d9eeff';ctx.lineWidth=2;ctx.shadowColor='#77bcff';ctx.shadowBlur=5;ctx.setLineDash([4,5]);
+ const center=s=>{const occupied=cells(s);return project([occupied.reduce((n,p)=>n+p[0],0)/occupied.length,.10,occupied.reduce((n,p)=>n+p[1],0)/occupied.length])};
+ ctx.beginPath();ctx.moveTo(...center(activeTip.steps[0].from));for(const hint of activeTip.steps)ctx.lineTo(...center(hint.to));ctx.stroke();ctx.setLineDash([]);
+ activeTip.steps.forEach((hint,i)=>{const [x,y]=center(hint.to);ctx.globalAlpha=i===0?.8:.23;for(const [a,b] of cells(hint.to))polygon([[a-.37,.06,b-.37],[a+.37,.06,b-.37],[a+.37,.06,b+.37],[a-.37,.06,b+.37]],'#b4ddff','#d9eeff');ctx.globalAlpha=1;ctx.fillStyle='#071c2d';ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d9eeff';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),x,y)});
+ ctx.restore();const index=reduced?0:Math.floor(time/1000)%activeTip.steps.length;drawBlock(vertices(activeTip.steps[index].to),.20);
+}
 showLevels();requestAnimationFrame(frame);
-
 
 
 
