@@ -2,9 +2,14 @@
 applicationId=com.lalaolemur.blockblock
 admobAppId=
 rewardedAdUnitId=
+interstitialAdUnitId=
 # Public licensing key from Play Console (not a signing/private key).
 billingPublicKey=
 privacyPolicyUrl=
 supportEmail=
 # Confirm audience before release; a children-directed release needs Families configuration.
 targetAudience=
+# Absolute path or path relative to android/. Keep the key outside the repository.
+uploadStoreFile=
+uploadKeyAlias=
+# Passwords belong in environment variables BLOCKBLOCK_STORE_PASSWORD / BLOCKBLOCK_KEY_PASSWORD.

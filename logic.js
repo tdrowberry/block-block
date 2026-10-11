@@ -1,3 +1,4 @@
+import {masterLevels} from './master-levels.js';
 import {mindbenderLevels} from './mindbender-levels.js';
 import {expertLevels} from './expert-levels.js';
 import {powerLevels,sizeIntro} from './power-levels.js';
@@ -17,6 +18,6 @@ export const levels = [
   {name:'Around the bend',description:'Good things come to those who turn.',map:['11110000','11111111','11111111','00011011','11111011','11111111','11111111'],start:[1,1],goal:[1,5]},
   {name:'Narrow thinking',description:'Find your balance between the islands.',map:['11100111','11111111','11111111','00100110','11111111','11111111','11100111'],start:[1,1],goal:[6,5]},
   {name:'The last escape',description:'One block. A few turns. You know the way.',map:['111100111','111111111','111100111','001100110','111111111','111001111','111111111','001111000'],start:[1,1],goal:[7,5]},
-  ...advancedLevels.map(prepareAdvanced), ...powerLevels, ...teleportLevels, ...finalLevels, ...expertLevels, ...mindbenderLevels
+  ...advancedLevels.map(prepareAdvanced), ...powerLevels, ...teleportLevels, ...finalLevels, ...expertLevels, ...mindbenderLevels, ...masterLevels
 ];
 

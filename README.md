@@ -35,7 +35,7 @@ Levels 27–30 add size-and-bridge challenges with minimum routes of 42, 46, 50,
 
 Level data uses optional `pads`, `b` bridge cells, and `f` fragile cells, so future 10-level chapters can introduce a mechanic without forcing it into every later board. The milestone schedule is size pads at 11, bridges at 21, teleports at 31, and fragile tiles at 41. Teleport pads use `type: 'teleport'` with a shared `pair` letter; every pair must have exactly two endpoints.
 
-The campaign now contains 70 levels. After level 10, 56 of 60 levels use at least one special mechanic. A few classic boards remain between mechanic-heavy puzzles for pacing. Power pads use animated, color-coded symbols and glows: three amber squares grow to three, one centered violet square shrinks to one, two lime squares restore size two, cyan switches control bridges, and swirling magenta or blue rings identify teleport pairs.
+The campaign now contains 100 levels. After level 10, 86 of 90 levels use at least one special mechanic. A few classic boards remain between mechanic-heavy puzzles for pacing. Power pads use animated, color-coded symbols and glows: three amber squares grow to three, one centered violet square shrinks to one, two lime squares restore size two, cyan switches control bridges, and swirling magenta or blue rings identify teleport pairs.
 
 Levels 37–40 continue the portal chapter with shortest solutions of 44, 48, 52, and 56 moves. Level 41 introduces amber cracked tiles in an eight-move lesson: cubes and lying blocks can cross, but an upright size-two or size-three block falls through. Levels 42–50 increase from 20 to 52 moves, combining fragile tiles with previous powers; level 44 is a classic rolling break. Each board has a solver-verified route and par. Existing players who cleared level 36 can continue straight into level 37.
 
@@ -62,3 +62,25 @@ Levels 61–70 form Look Again: compact 9×9 mindbenders with verified solutions
 ## Optional Tips
 
 The Tip button previews up to 20 moves from the current state with numbered shadow footprints and a transparent block. Routes account for size pads, bridges, portals, and fragile tiles. Following the route reduces the remaining preview; taking another route, restarting, or leaving the level clears it. An unsolvable position is detected before spending. The Android app supports a five-credit consumable (`tips_5`) at the Play Console price or one credit per completed rewarded ad. Credits are local to the device; no fake ad or payment unlock ships in the browser.
+
+
+## October 10 presentation and Android release pass
+
+The menu now includes original vector artwork, per-chapter progress, and a refined mobile layout. Tiles and blocks have inset edge detailing and shaded materials. Movement buffers one intentional follow-up input and ignores held-key repeats. Sound preferences persist; backgrounding suspends movement and sound. Existing levels, controls, camera direction, and saved scores are preserved.
+
+Android may show a preloaded interstitial before results after every five newly completed levels, with a two-minute cooldown after a full-screen ad. Replays and failed attempts do not count, and unavailable ads are skipped. Debug builds use Google test ads. Rewarded ads still grant one Tip only when the reward is earned.
+
+See `release-assets/` for visual review captures and listing materials, and [PLAY-RELEASE.md](PLAY-RELEASE.md) for release configuration, signing, remaining account requirements, and device testing. Use `PORT=3101` (or set the PORT environment variable in PowerShell) to preview alongside another local server.
+
+
+## Levels 71–100: the master campaign
+
+Thirty new boards extend the game to 100 levels. Minimum solutions increase by two moves per level, from 50 at level 71 to 108 at level 100. These are exact breadth-first-search minimums, not suggested scores. Each route uses all three block sizes and crosses a bridge; removing size pads or bridge switches makes the puzzle unsolvable.
+
+- 71–80, Beyond Balance: 50–68 moves, combining transformations and bridge crossings.
+- 81–90, Distant Connections: 70–88 moves, adding mandatory portal travel.
+- 91–100, The Final Reckoning: 90–108 moves, combining transformations, bridges, portals, and fragile tiles.
+
+Boards stay within 12×12, 13×13, and 14×14 respectively. The shortest verified routes revisit positions in different states. Increasing route length and added mechanics provide the difficulty ramp; perceived human difficulty still needs playtesting. Existing levels and score keys are untouched, and completing level 70 unlocks level 71.
+
+`generate-master-levels.mjs` searches for static boards with a fixed seed; `--resume` continues from the current accepted set. Generation is an offline development step; no search or procedural generation runs when loading a level. `master.test.js` checks exact minimums, essential mechanics, board validity, and old-save progression through level 100.

@@ -1,4 +1,6 @@
+import './master.test.js';
 import './tips.test.js';
+import './motion.test.js';
 import './store.test.js';
 import test from 'node:test';
 import './progress.test.js';
@@ -28,7 +30,7 @@ test('fragile tiles support cubes and lying blocks but reject tall upright block
  assert.equal(step({map:['111f']},{x:1,z:0,o:'x'},'right'),null);
 });
 test('fourteen added levels have verified pars and introduce fragile tiles at 41',()=>{
- assert.equal(levels.length,70);
+ assert.equal(levels.length,100);
  assert.ok(levels.slice(0,40).every(l=>l.map.every(r=>!r.includes('f'))));
  assert.ok(levels[40].map.some(r=>r.includes('f')));
  for(const l of levels.slice(36,50))assert.equal(solve(l)?.length,l.par);
@@ -43,7 +45,7 @@ test('a single unsupported half causes a fall',()=>{assert.equal(supported({map:
 test('goal requires standing upright',()=>{const l={goal:[1,1]};assert.equal(won(l,{x:1,z:1,o:'x'}),false);assert.equal(won(l,{x:1,z:1,o:'u'}),true)});
 for(const level of levels)test(`${level.name} has a valid route`,()=>{let s={x:level.start[0],z:level.start[1],o:'u'};assert.ok(supported(level,s));const path=solve(level);assert.ok(path?.length,'Level must be solvable');for(const d of path){s=step(level,s,d);assert.ok(s);assert.ok(supported(level,s))}assert.ok(won(level,s));console.log(`${level.name}: ${path.length} moves`)});
 test('ten new power levels have strictly increasing verified shortest solutions',()=>{
-  assert.equal(levels.length,70);
+  assert.equal(levels.length,100);
   let previous=0;
   for(const level of levels.slice(16,26)){
     const shortest=solve(level).length;

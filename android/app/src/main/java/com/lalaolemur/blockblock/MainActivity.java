@@ -14,6 +14,7 @@ import androidx.webkit.WebViewAssetLoader;
 import com.android.billingclient.api.*;
 import com.google.android.gms.ads.*;
 import com.google.android.gms.ads.rewarded.*;
+import com.google.android.gms.ads.interstitial.*;
 import com.google.android.ump.*;
 import org.json.*;
 import java.util.*;
@@ -27,6 +28,9 @@ public class MainActivity extends ComponentActivity {
  private ProductDetails product;
  private ConsentInformation consent;
  private boolean adsInitialized=false,adBusy=false;
+ private InterstitialAd interstitial;
+ private boolean interstitialLoading=false;
+ private long interstitialLoadedAt=0,lastFullScreenAt=0;
  private String purchaseRequest=null;
  private static final String ORIGIN="https://appassets.androidplatform.net";
  @Override public void onCreate(Bundle state){
@@ -57,7 +61,35 @@ public class MainActivity extends ComponentActivity {
   consent=UserMessagingPlatform.getConsentInformation(this);
   consent.requestConsentInfoUpdate(this,new ConsentRequestParameters.Builder().build(),()->UserMessagingPlatform.loadAndShowConsentFormIfRequired(this,error->initAds()),error->initAds());
  }
- private void initAds(){if(consent.canRequestAds()&&!adsInitialized){adsInitialized=true;MobileAds.initialize(this,status->{});}}
+ private void initAds(){
+  if(!consent.canRequestAds()){interstitial=null;return;}
+  if(!adsInitialized){adsInitialized=true;MobileAds.initialize(this,status->runOnUiThread(this::preloadInterstitial));}
+  else preloadInterstitial();
+ }
+ private void preloadInterstitial(){
+  if(!adsInitialized||!consent.canRequestAds()||interstitialLoading||interstitial!=null||isFinishing())return;
+  interstitialLoading=true;
+  InterstitialAd.load(this,BuildConfig.INTERSTITIAL_ID,new AdRequest.Builder().build(),new InterstitialAdLoadCallback(){
+   @Override public void onAdLoaded(InterstitialAd ad){interstitialLoading=false;if(consent.canRequestAds()){interstitial=ad;interstitialLoadedAt=android.os.SystemClock.elapsedRealtime();}}
+   @Override public void onAdFailedToLoad(LoadAdError error){interstitialLoading=false;}
+  });
+ }
+ // Called only after a newly completed puzzle. Replays never increment this counter.
+ private void levelComplete(String id){
+  int count=wallet.getInt("newCompletions",0)+1;
+  if(!wallet.edit().putInt("newCompletions",count).commit()){reply(id,object("shown",false));return;}
+  long now=android.os.SystemClock.elapsedRealtime();
+  if(interstitial!=null&&now-interstitialLoadedAt>3500000)interstitial=null;
+  if(!AdCadence.eligible(count,now,lastFullScreenAt)||adBusy||interstitial==null||!consent.canRequestAds()||!getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)){
+   reply(id,object("shown",false));preloadInterstitial();return;
+  }
+  InterstitialAd ad=interstitial;interstitial=null;adBusy=true;
+  ad.setFullScreenContentCallback(new FullScreenContentCallback(){
+   @Override public void onAdDismissedFullScreenContent(){adBusy=false;lastFullScreenAt=android.os.SystemClock.elapsedRealtime();reply(id,object("shown",true));preloadInterstitial();}
+   @Override public void onAdFailedToShowFullScreenContent(AdError error){adBusy=false;reply(id,object("shown",false));preloadInterstitial();}
+  });
+  ad.show(this);
+ }
  private int credits(){return wallet.getInt("credits",0);}
  private JSONObject object(Object... pairs){JSONObject o=new JSONObject();try{for(int i=0;i<pairs.length;i+=2)o.put((String)pairs[i],pairs[i+1]);}catch(JSONException ignored){}return o;}
  private void reply(String id,JSONObject result){
@@ -80,10 +112,12 @@ public class MainActivity extends ComponentActivity {
        if(!wallet.edit().putInt("credits",credits()-1).commit()){error(id,"Could not save your balance. Please try again.");break;}
        reply(id,object("credits",credits(),"spent",true));break;
       case "ad":showRewarded(id);break;
+      case "levelComplete":levelComplete(id);break;
       case "buy":buy(id);break;
       case "privacy":
        final String privacyId=id;
        if(consent.getPrivacyOptionsRequirementStatus()!=ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED){reply(id,object("message","No additional ad privacy choices are currently required."));break;}
+       interstitial=null;
        UserMessagingPlatform.showPrivacyOptionsForm(MainActivity.this,e->{initAds();if(e!=null)error(privacyId,"Privacy choices are temporarily unavailable.");else reply(privacyId,object("message","Privacy choices saved."));});break;
       default:error(id,"Unknown store action.");
      }
@@ -98,9 +132,10 @@ public class MainActivity extends ComponentActivity {
   RewardedAd.load(this,BuildConfig.REWARDED_ID,new AdRequest.Builder().build(),new RewardedAdLoadCallback(){
    @Override public void onAdFailedToLoad(LoadAdError e){adBusy=false;error(id,"No ad is available right now. No Tip was spent.");}
    @Override public void onAdLoaded(RewardedAd ad){
+    if(!consent.canRequestAds()||!getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)){adBusy=false;error(id,"Return to the game and try again.");return;}
     final boolean[] earned={false},saved={false};
     ad.setFullScreenContentCallback(new FullScreenContentCallback(){
-     @Override public void onAdDismissedFullScreenContent(){adBusy=false;if(earned[0]&&!saved[0])error(id,"Your reward could not be saved. Please check device storage.");else reply(id,object("credits",credits(),"message",earned[0]?"You earned 1 Tip. Tap Use 1 Tip to reveal the trail.":"Ad closed before a reward was earned."));}
+     @Override public void onAdDismissedFullScreenContent(){adBusy=false;lastFullScreenAt=android.os.SystemClock.elapsedRealtime();if(earned[0]&&!saved[0])error(id,"Your reward could not be saved. Please check device storage.");else reply(id,object("credits",credits(),"message",earned[0]?"You earned 1 Tip. Tap Use 1 Tip to reveal the trail.":"Ad closed before a reward was earned."));}
      @Override public void onAdFailedToShowFullScreenContent(AdError e){adBusy=false;error(id,"The ad could not be shown. No Tip was spent.");}
     });
     ad.show(MainActivity.this,reward->{if(!earned[0]){earned[0]=true;saved[0]=wallet.edit().putInt("credits",credits()+1).commit();}});
@@ -151,6 +186,7 @@ public class MainActivity extends ComponentActivity {
  @Override protected void onResume(){super.onResume();if(web!=null)web.onResume();if(billing!=null&&billing.isReady())recoverPurchases();}
  @Override protected void onPause(){if(web!=null)web.onPause();super.onPause();}
  private void handleBack(){
+  if(adBusy)return;
   if(web.canGoBack()){web.goBack();return;}
   web.evaluateJavascript("(()=>{const d=document.querySelector('dialog[open]');if(d){if(!document.getElementById('close-tip').disabled)d.close();return true;}const p=document.getElementById('play-screen');if(p&&!p.hidden){document.getElementById('level-menu').click();return true;}return false;})()",handled->{if("false".equals(handled))finish();});
  }
