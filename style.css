@@ -49,5 +49,45 @@ button:active:not(:disabled){transform:translateY(2px) scale(.98)}
 @media(max-height:600px){.result-card{padding:15px 22px}.result-scores{padding:8px}.result h2{font-size:26px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 .menu-screen{overflow-x:clip}
+.menu-actions{flex-wrap:wrap}
+#tip-shop{width:min(94vw,640px)}
+.store-packs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.tip-pack{padding:14px;background:#ffffff06;border:1px solid #8aa57745;border-radius:14px;margin:0!important}
+.tip-pack h3{font-size:20px;margin:0 0 8px}.tip-pack .pack-price{font-size:18px;color:#e4eddb;font-variant-numeric:tabular-nums}
+.tip-pack .pack-price.unavailable{font-size:12px;color:#a8bd9c}
+.tip-pack .pack-saving{font-size:11px;line-height:1.5;min-height:34px;margin:6px 0 12px}
+.tip-pack button{width:100%;padding:8px;min-height:44px;font-size:12px}.tip-pack button:disabled{opacity:.5}
+#store-balance{font-weight:600;color:#e4eddb;margin:14px 0}.help-content .store-disclosure{font-size:12px;line-height:1.6;margin:12px 0;color:#c3d2b5}
+#store-status{margin:12px 0;color:#e7ce8b}#store-refresh{width:100%;margin:0 0 14px}
+@media(max-width:350px){.store-packs{gap:8px}.tip-pack{padding:10px}.tip-pack h3{font-size:17px}.tip-pack .pack-price{font-size:15px}}
+.play-screen.tutorial-active{grid-template-rows:auto auto minmax(0,1fr) auto}
+.tutorial-panel{padding:12px 18px;border-bottom:1px solid #b6cda330;background:#1a3023;z-index:2}
+.tutorial-panel p{max-width:760px;margin:0 auto 10px;font-size:14px;line-height:1.5;color:#e4eddb}
+.tutorial-panel>div{display:flex;gap:10px;max-width:760px;margin:auto}
+.tutorial-panel button{padding:8px 14px;min-height:44px;font-size:12px}
+.tutorial-panel button:disabled{opacity:.45;cursor:default}
+.tutorial-hand{position:absolute;left:50%;top:54%;z-index:3;pointer-events:none;text-align:center;--swipe-x:65px;--swipe-y:0px}
+.tutorial-hand span{display:block;font-size:52px;filter:drop-shadow(0 3px 8px #000);animation:tutorial-swipe 1.5s ease-in-out infinite}
+.tutorial-hand b{display:block;margin-top:8px;font-size:10px;letter-spacing:2px;color:#edf5db;text-shadow:0 2px 4px #000}
+.tutorial-hand.demo-hand span{animation:none}
+.tutorial-hand.demo-hand.demo-playing span{animation:tutorial-demo .9s ease-in-out 1 both}
+@keyframes tutorial-demo{from{transform:translate(-32px,0)}to{transform:translate(32px,0)}}
+.tutorial-hand[data-direction=left]{--swipe-x:-65px}.tutorial-hand[data-direction=up]{--swipe-x:0px;--swipe-y:-55px}
+.tutorial-hand[data-direction=down]{--swipe-x:0px;--swipe-y:55px}
+@keyframes tutorial-swipe{0%,15%{transform:translate(calc(var(--swipe-x) * -.5),calc(var(--swipe-y) * -.5));opacity:.4}65%,85%{transform:translate(calc(var(--swipe-x) * .5),calc(var(--swipe-y) * .5));opacity:1}100%{opacity:.1}}
+#tutorial-offer button,#tutorial-replay{width:100%;display:block;margin-top:14px}
+@media(max-height:480px) and (orientation:landscape){.tutorial-panel{padding:7px 12px;min-height:56px}.tutorial-panel p{font-size:12px;margin-bottom:5px}.tutorial-panel>div{position:absolute;right:12px;top:8px;max-width:180px}.tutorial-panel{padding-right:205px;position:relative}.tutorial-panel button{font-size:10px;padding:5px;min-height:40px}.tutorial-hand{top:33%}.tutorial-hand span{font-size:36px}}
 @media(max-width:699px){.menu-intro{min-height:410px}.hero-art{width:300px;top:190px;right:0}.menu-intro p{max-width:290px}}
 @media(max-width:350px){.hero-art{width:270px;top:198px;right:-5px}}
+
+/* A gentle family story, with reading time controlled by the player. */
+.world{cursor:default;overflow-y:auto;display:block;padding:24px 18px;padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.story-card{max-width:540px;min-height:100%;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.world h2{font-family:Georgia,serif;font-size:clamp(27px,6vw,40px);letter-spacing:-.7px;line-height:1.15;margin:0;max-width:490px}
+.world p{font-size:16px;line-height:1.75;color:#deead2;margin:0;max-width:490px}
+.story-art{display:block;width:100%;max-width:390px;height:auto;margin:0 auto}.world .story-art{max-height:190px;object-fit:contain}
+.world .primary{margin:8px 0;min-height:48px}.world .eyebrow{margin-top:10px}
+#story-dialog{width:min(94vw,580px)}#story-dialog h3{font-family:Georgia,serif;font-size:26px;line-height:1.2;margin:14px 0}#story-copy{line-height:1.8}#story-done{width:100%;margin-top:16px}.story-navigation{display:flex;justify-content:space-between;gap:12px}.story-navigation button:disabled{opacity:.4}
+.ending-story{border-top:1px solid #c8dda633;margin-top:18px}.ending-story .story-art{max-width:280px}.result-card{max-height:none}.result:has(.ending-story:not([hidden])){align-items:flex-start;padding-top:24px;padding-bottom:24px}.result-card h2{overflow-wrap:anywhere}
+@media(max-height:600px){.world .story-art{max-height:110px}.story-card{gap:10px}.world p{font-size:14px;line-height:1.6}.world h2{font-size:27px}}
+@media(max-width:699px){.hero-art{top:205px;width:320px;right:-12px}.menu-intro{min-height:405px}}

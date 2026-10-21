@@ -1,0 +1,16 @@
+# Copy to release.properties. Never commit signing keys or passwords.
+applicationId=com.lalaolemur.blockblock
+admobAppId=
+rewardedAdUnitId=
+interstitialAdUnitId=
+# Public licensing key from Play Console (not a signing/private key).
+billingPublicKey=
+# Published Render privacy-policy page, verified October 13, 2026.
+privacyPolicyUrl=https://block-block-kdss.onrender.com/privacy.html
+supportEmail=lalao.lemur@gmail.com
+# Owner confirmed children under 13 and older players. Complete Families declarations.
+targetAudience=mixed
+# Absolute path or path relative to android/. Keep the key outside the repository.
+uploadStoreFile=
+uploadKeyAlias=
+# Passwords belong in environment variables BLOCKBLOCK_STORE_PASSWORD / BLOCKBLOCK_KEY_PASSWORD.

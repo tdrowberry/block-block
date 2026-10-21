@@ -2,25 +2,25 @@ TITLE
 Block Block
 
 SHORT DESCRIPTION
-Roll, resize and teleport through 100 clever block puzzles.
+Help Block find his triangle son through 100 clever puzzles about belonging.
 
 FULL DESCRIPTION
-A little balance. A little nerve. One perfect move at a time.
+Different shapes. One family.
 
-Tip your block across floating platforms and stand upright on the glowing exit. It sounds simple—until the shortest path takes you in the wrong direction.
+Join Block on a gentle journey to find his triangle son, who has set off because he feels he does not belong. Follow their story through 20 worlds, help them find each other, and bring them home together. A warm adventure about loving your family exactly as they are.
 
-100 PUZZLES, TEN CHAPTERS
-Find your footing, change your shape, build bridges, step through portals, and learn which fragile tiles can take your weight. Later chapters combine these mechanics into surprising escapes. The final 30 master puzzles demand at least 50 moves, rising to a 108-move finale.
+Guide your block across floating platforms and stand upright on the exit at normal size: two squares tall. Explore 100 puzzles with size-changing pads, bridges, portals and fragile tiles.
+
+LEARN BY PLAYING
+Try the optional interactive tutorial with guided swipes and practice moves, or skip straight to level 1. Replay it whenever you want.
 
 MAKE EVERY MOVE COUNT
-Beat a level to unlock the next. Replay favorites, improve your personal best, and match the minimum move count to earn a permanent perfect star.
-
-PLAY YOUR WAY
-Choose swipe controls or on-screen arrows. Enjoy optional sound and reduced-motion support. The puzzles work offline, and your progress stays on your device.
+Complete a level to unlock the next. Replay favorites, improve your best score and match the minimum move count to earn a perfect star. Choose swipe controls or on-screen arrows, with optional sound and reduced-motion support.
 
 A LITTLE NUDGE
-Optional Tips reveal a trail of up to 20 moves from your current position. Earn one Tip by completing a rewarded ad, or buy a five-Tip pack through Google Play. Every level can be solved without Tips.
+Earn one free Tip for every three different campaign levels completed. Each Tip previews up to 20 moves from your current position. Replays and tutorial lessons do not earn extra Tips. Every puzzle can be solved without Tips.
 
-Contains ads and optional in-app purchases. An automatic ad may appear after five newly completed levels, between puzzles. Ads and purchases require an internet connection. Progress and unused Tips are device-local and are lost if app data is cleared or the app is uninstalled.
+COMPLETELY FREE
+No ads. No purchases. No account needed. Play offline. Progress and unused Tips stay on this device and are lost if you uninstall or clear app data.
 
 Created by Lalao Lemur.

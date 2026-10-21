@@ -14,7 +14,8 @@ test('store bridge only resolves matching confirmations and propagates cancellat
   await Promise.resolve();assert.equal(settled,false);
   events.dispatchEvent(new CustomEvent('block-block-store',{detail:{id:request.id,spent:true,credits:2}}));
   assert.deepEqual(await operation,{spent:true,credits:2});
-  const canceled=storeRequest('buy');
+  const canceled=storeRequest('buy','tips_50');
+  assert.equal(request.productId,'tips_50');
   events.dispatchEvent(new CustomEvent('block-block-store',{detail:{id:request.id,error:'Purchase canceled'}}));
   await assert.rejects(canceled,/Purchase canceled/);
   delete events.BlockBlockNative;assert.equal(hasNativeStore(),false);

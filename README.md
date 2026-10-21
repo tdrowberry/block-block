@@ -6,6 +6,8 @@ A 3D rolling-block puzzle. Tip a 1 × 1 × 2 block across floating tiles and lan
 
 ## Play
 
+New players can choose **Learn to play** or **Skip to level 1**. The optional 13-lesson interactive tutorial demonstrates a swipe, then asks for real practice moves. It covers gaps, fragile floor, grow/shrink/normal pads, bridges, portals and the upright 1 × 1 × 2 exit requirement. Replay it from Learn to play on the menu or How to play. Lessons do not change campaign scores, unlock levels, spend Tips or trigger completion ads. Saved control preferences are preserved; swipe practice temporarily uses swipes (keyboard input is also supported).
+
 Run `npm start`, then open http://localhost:3000. No package installation is needed (Node.js 18+).
 
 - Arrow keys or WASD: roll
@@ -49,7 +51,7 @@ The app starts on level select. Completed, available, and locked levels have dis
 
 A web app manifest, 192/512-pixel app icons, and an offline service worker are included. In a supporting browser, the Install app button appears when installation is offered. Offline play is available after the app assets have been cached during an online visit. Progress is local to the browser/device; clearing site data removes it.
 
-The `android` project packages the game as an offline Android app with optional Google Play Tip purchases and AdMob rewarded ads. See [PLAY-RELEASE.md](PLAY-RELEASE.md) for build instructions and the owner configuration still required before publishing. Debug builds use test ads; release builds require real account configuration and signing.
+
 
 Completion ratings compare your moves with the solver-verified minimum shown in the HUD and results. Exact minimum earns Absolutely Perfect and a permanent perfect star on level select; 1–10 extra moves earns Almost perfect, 11–20 earns Good escape, and larger detours get rotating playful messages. Replay directly from the result screen to improve your best. Every escape still unlocks the next level regardless of rating.
 
@@ -61,14 +63,16 @@ Levels 61–70 form Look Again: compact 9×9 mindbenders with verified solutions
 
 ## Optional Tips
 
-The Tip button previews up to 20 moves from the current state with numbered shadow footprints and a transparent block. Routes account for size pads, bridges, portals, and fragile tiles. Following the route reduces the remaining preview; taking another route, restarting, or leaving the level clears it. An unsolvable position is detected before spending. The Android app supports a five-credit consumable (`tips_5`) at the Play Console price or one credit per completed rewarded ad. Credits are local to the device; no fake ad or payment unlock ships in the browser.
+
+
+
 
 
 ## October 10 presentation and Android release pass
 
 The menu now includes original vector artwork, per-chapter progress, and a refined mobile layout. Tiles and blocks have inset edge detailing and shaded materials. Movement buffers one intentional follow-up input and ignores held-key repeats. Sound preferences persist; backgrounding suspends movement and sound. Existing levels, controls, camera direction, and saved scores are preserved.
 
-Android may show a preloaded interstitial before results after every five newly completed levels, with a two-minute cooldown after a full-screen ad. Replays and failed attempts do not count, and unavailable ads are skipped. Debug builds use Google test ads. Rewarded ads still grant one Tip only when the reward is earned.
+
 
 See `release-assets/` for visual review captures and listing materials, and [PLAY-RELEASE.md](PLAY-RELEASE.md) for release configuration, signing, remaining account requirements, and device testing. Use `PORT=3101` (or set the PORT environment variable in PowerShell) to preview alongside another local server.
 
@@ -84,3 +88,11 @@ Thirty new boards extend the game to 100 levels. Minimum solutions increase by t
 Boards stay within 12×12, 13×13, and 14×14 respectively. The shortest verified routes revisit positions in different states. Increasing route length and added mechanics provide the difficulty ramp; perceived human difficulty still needs playtesting. Existing levels and score keys are untouched, and completing level 70 unlocks level 71.
 
 `generate-master-levels.mjs` searches for static boards with a fixed seed; `--resume` continues from the current accepted set. Generation is an offline development step; no search or procedural generation runs when loading a level. `master.test.js` checks exact minimums, essential mechanics, board validity, and old-save progression through level 100.
+
+## Free release 1.2.0
+
+No ads, purchases, age screen or tracking SDKs. Earn one free Tip per three distinct campaign completions, including existing progress (33 across 100 levels). Replays and tutorials do not award extra Tips. Spending is saved locally before the trail appears. See PLAY-RELEASE.md. The prior monetized source is preserved in archive/monetized-version and excluded from builds.
+
+## A story about belonging
+
+Block searches for his triangle son, who has set out because he feels different. Twenty gentle story scenes follow the five-level worlds. The ending reunites father and son and brings them home together. There are no villains, police, kidnapping, or combat. Story scenes wait for Continue; Our story on the menu replays only reached scenes and unlocks the ending after level 100. Existing puzzles, scores, and tutorials are preserved. The family artwork and story are included in the offline cache and Android asset copy.

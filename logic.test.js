@@ -1,7 +1,9 @@
+import './story.test.js';
 import './master.test.js';
 import './tips.test.js';
 import './motion.test.js';
-import './store.test.js';
+import './tutorial.test.js';
+import './free-tips.test.js';
 import test from 'node:test';
 import './progress.test.js';
 import './camera.test.js';

@@ -1,6 +1,12 @@
 import {planTip,advanceTip} from './tips.js';
-import {hasNativeStore,storeRequest} from './store.js';
+import {createTipWallet,tipStatus} from './free-tips.js';
+const tipWallet=createTipWallet({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
 import {createMoveBuffer} from './motion.js';
+import {storyWorlds,storyEnding,storyChapterNames,storyForLevel,availableStory as storyPages} from './story.js';
+import {tutorialLessons} from './tutorial.js';
+
+let tutorialIndex=null,tutorialReady=false,tutorialDemoPending=false,tutorialDemoRunning=false,tutorialDemoAt=0;
+const currentBoard=()=>tutorialIndex===null?levels[levelIndex]:tutorialLessons[tutorialIndex].level;
 const moveBuffer=createMoveBuffer();
 let completionBusy=false,hiddenAt=null;
 let activeTip=null,tipCandidate=null,tipBusy=false;
@@ -24,8 +30,8 @@ let splashFor=-1,splashTimer=0,bits=[];const cv=$('confetti'),cctx=cv?.getContex
 function hideWorld(){clearTimeout(splashTimer);if($('world'))$('world').hidden=true;if(phase==='splash')phase='playing'}
 function showWorld(i){
  if(!$('world')||!cv)return;
- splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1}`;$('world-name').textContent=th.name;$('world').hidden=false;
- splashTimer=setTimeout(hideWorld,2600);if(reduced)return;
+ const beat=storyForLevel(i);splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1} · ${th.name.toUpperCase()}`;$('world-name').textContent=beat.title;$('world-story').textContent=beat.text;$('world').hidden=false;$('world-continue').focus();
+ if(reduced)return;
  const ratio=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;cv.width=w*ratio;cv.height=h*ratio;cctx.setTransform(ratio,0,0,ratio,0,0);
  const hues=[th.a,th.h,(th.a+40)%360,(th.h+180)%360];bits=[];
  for(let n=0;n<150;n++){const side=n%2?1:-1,ang=-Math.PI/2+side*(.15+Math.random()*.7),sp=(.55+Math.random()*.6)*Math.min(h,900)*.021;bits.push({x:w/2+side*w*.42,y:h*.85,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,s:4+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*.4,c:n%9===0?'#fff':`hsl(${hues[n%4]},80%,${55+Math.random()*20}%)`,life:1})}
@@ -36,8 +42,8 @@ function confetti(time){
  for(const b of bits){b.vy+=.28*k;b.vx*=Math.pow(.99,k);b.x+=b.vx*k;b.y+=b.vy*k;b.rot+=b.vr*k;b.life-=.006*k;cctx.save();cctx.globalAlpha=Math.max(0,Math.min(1,b.life*2));cctx.translate(b.x,b.y);cctx.rotate(b.rot);cctx.scale(1,Math.abs(Math.cos(b.rot*1.7))+.2);cctx.fillStyle=b.c;cctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);cctx.restore()}
  bits=bits.filter(b=>b.life>0&&b.y<innerHeight+30);if(!bits.length)cctx.clearRect(0,0,cv.width,cv.height);
 }
-if($('world'))$('world').onclick=hideWorld;
-const chapterNames=['01 · FIND YOUR FOOTING','02 · CHANGE YOUR SHAPE','03 · BUILD YOUR BRIDGES','04 · STEP THROUGH SPACE','05 · TREAD LIGHTLY','06 · MASTER THE ESCAPE','07 · LOOK AGAIN','08 · BEYOND BALANCE','09 · DISTANT CONNECTIONS','10 · THE FINAL RECKONING'];
+$('world-continue').onclick=()=>{hideWorld();canvas.focus({preventScroll:true})};
+const chapterNames=storyChapterNames.map((name,i)=>`${String(i+1).padStart(2,'0')} · ${name}`);
 function renderLevels(){
  const frontier=unlockedThrough(bests,levels.length);$('levels').replaceChildren();
  for(let start=0;start<levels.length;start+=10){
@@ -50,9 +56,31 @@ function renderLevels(){
  const count=Object.keys(bests).length;$('progress-label').textContent=`${count} / ${levels.length} completed`;$('progress-percent').textContent=`${Math.round(count/levels.length*100)}%`;$('progress-bar').value=count;$('progress-bar').max=levels.length;
  $('continue').textContent=`${count===levels.length?'Replay':frontier===0?'Start':'Continue'} level ${String(frontier+1).padStart(2,'0')} ↗`;
 }
-function showLevels(){if(completionBusy)return;moveBuffer.clear();activeTip=null;applyTheme(0);splashFor=-1;hideWorld();bits=[];screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();window.scrollTo(0,0)}
+function showLevels(){if(completionBusy)return;tutorialIndex=null;tutorialDemoPending=false;tutorialDemoRunning=false;$('tutorial-panel').hidden=true;$('tutorial-hand').hidden=true;$('play-screen').classList.remove('tutorial-active');$('tip-button').hidden=false;moveBuffer.clear();activeTip=null;applyTheme(0);splashFor=-1;hideWorld();bits=[];screen='levels';phase='menu';animation=null;touch=null;$('result').hidden=true;$('play-screen').hidden=true;$('level-screen').hidden=false;document.body.style.overflow='';renderLevels();applyControls();window.scrollTo(0,0)}
+function loadTutorial(index=0){
+ if(completionBusy)return;
+ tutorialIndex=index;tutorialReady=false;tutorialDemoRunning=false;tutorialDemoPending=Boolean(tutorialLessons[index].demo);
+ tutorialDemoAt=performance.now()+700;
+ const lesson=tutorialLessons[index];moveBuffer.clear();activeTip=null;hideWorld();bits=[];state={...lesson.state};history=[];animation=null;touch=null;phase='playing';screen='play';applyTheme(0);
+ $('level-screen').hidden=true;$('play-screen').hidden=false;$('play-screen').classList.add('tutorial-active');document.body.style.overflow='hidden';$('result').hidden=true;$('tutorial-panel').hidden=false;$('tip-button').hidden=true;
+ $('level-tag').textContent=`TUTORIAL · ${index+1} / ${tutorialLessons.length}`;$('level-name').textContent=lesson.title;$('tutorial-instruction').textContent=lesson.text;$('status').textContent=lesson.demo?'Watch this first.':'Your turn.';
+ $('tutorial-next').disabled=true;$('tutorial-next').textContent=index===tutorialLessons.length-1?'Start level 01':'Next lesson';$('tutorial-hand').hidden=reduced;$('tutorial-hand').dataset.direction=lesson.dir;$('tutorial-hand').classList.toggle('demo-hand',Boolean(lesson.demo));$('tutorial-hand').classList.remove('demo-playing');
+ $('tip-progress').textContent='';update();applyControls();resize();canvas.focus({preventScroll:true});
+}
+function tutorialLanded(){
+ tutorialReady=true;tutorialDemoRunning=false;phase='playing';animation=null;moveBuffer.clear();$('tutorial-hand').hidden=true;$('tutorial-instruction').textContent=tutorialLessons[tutorialIndex].after;$('status').textContent='Lesson complete. Continue when you are ready.';$('tutorial-next').disabled=false;
+}
+$('tutorial-start').onclick=()=>loadTutorial();$('tutorial-replay').onclick=()=>{ $('help-dialog').close();loadTutorial() };
+function skipTutorial(){try{localStorage.setItem('block-block-tutorial','skipped')}catch{}$('tutorial-offer').close();showLevels();load(0)}
+$('tutorial-skip').onclick=skipTutorial;$('tutorial-offer-skip').onclick=skipTutorial;
+$('tutorial-offer-start').onclick=()=>{$('tutorial-offer').close();try{localStorage.setItem('block-block-tutorial','started')}catch{}loadTutorial()};
+$('tutorial-offer').addEventListener('cancel',event=>{event.preventDefault();skipTutorial()});
+$('tutorial-next').onclick=()=>{
+ if(!tutorialReady||animation)return;
+ if(tutorialIndex===tutorialLessons.length-1){try{localStorage.setItem('block-block-tutorial','complete')}catch{}showLevels();load(0)}else loadTutorial(tutorialIndex+1);
+};
 function tone(freq=160,duration=.08){if(!sound)return;try{audio??=new AudioContext();audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*.65,audio.currentTime+duration);gain.gain.setValueAtTime(.06,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+duration)}catch{}}
-function update(){ $('moves').textContent=String(history.length).padStart(2,'0');$('minimum').textContent=minimumMoves[levelIndex];$('best').textContent=bests[scoreKey(levelIndex)]??'—';canvas.setAttribute('aria-busy',String(Boolean(animation)));}
+function update(){ $('moves').textContent=String(history.length).padStart(2,'0');$('minimum').textContent=tutorialIndex===null?minimumMoves[levelIndex]:'—';$('best').textContent=tutorialIndex===null?(bests[scoreKey(levelIndex)]??'—'):'—';canvas.setAttribute('aria-busy',String(Boolean(animation)));}
 function load(i,afterFall=false){
  if(completionBusy||!canPlay(bests,i,levels.length))return;moveBuffer.clear();
  activeTip=null;$('tip-progress').textContent='';levelIndex=i;applyTheme(i);state={x:levels[i].start[0],z:levels[i].start[1],o:'u'};history=[];animation=null;touch=null;phase='playing';screen='play';
@@ -60,42 +88,47 @@ function load(i,afterFall=false){
  $('level-tag').textContent=`LEVEL ${String(i+1).padStart(2,'0')} / ${levels.length} · ${th.name.toUpperCase()}`;$('level-name').textContent=levels[i].name;
  $('status').textContent=(!afterFall&&i%5===0&&i>0?`New world: ${th.name}! `:'')+(afterFall?'New attempt. Keep the whole block on the tiles.':levels[i].description?levels[i].description:'Swipe to roll. Stand upright on the glowing exit.');
  update();resize();canvas.focus({preventScroll:true});
- hideWorld();if(!afterFall&&i>0&&i%5===0&&splashFor!==i)showWorld(i);
+ hideWorld();if(!afterFall&&i%5===0&&splashFor!==i)showWorld(i);
 }
-function move(dir,repeat=false){
- if(document.hidden||screen!=='play'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)||phase!=='playing')return;
+function move(dir,repeat=false,demo=false){
+ if(document.hidden||screen!=='play'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open||$('story-dialog').open)||phase!=='playing')return;
+ if(tutorialIndex!==null){
+  const lesson=tutorialLessons[tutorialIndex];
+  if(animation||tutorialReady||repeat||lesson.demo&&!demo)return;
+  if(dir!==lesson.dir){$('status').textContent=`Try swiping ${lesson.dir.toUpperCase()} for this lesson.`;return;}
+ }
  if(animation){moveBuffer.offer(dir,repeat);return}
  if(repeat)return;
- history.push({...state});animation={kind:'roll',from:{...state},to:roll(state,dir),dir,start:performance.now(),duration:reduced?60:175};tone();update()
+ history.push({...state});animation={kind:'roll',from:{...state},to:roll(state,dir),dir,start:performance.now(),duration:reduced?60:demo?900:175};tone();update()
 }
 async function finish(success){
  moveBuffer.clear();
+ if(tutorialIndex!==null){tutorialLanded();return;}
  if(!success){tone(90,.2);load(levelIndex,true);return}
  const firstClear=bests[scoreKey(levelIndex)]==null;
  phase='won';bests=recordWin(bests,levelIndex,history.length,levels.length);try{localStorage.setItem('block-block-best',JSON.stringify(bests))}catch{}
- if(firstClear&&hasNativeStore()){
-  completionBusy=true;phase='adbreak';$('status').textContent='Escape complete. Checking the next chapter…';
-  try{await storeRequest('levelComplete')}catch{/* Ad availability must never gate progression. */}
-  completionBusy=false;phase='won';
- }
+ const tipEarned=firstClear&&tipStatus(bests,levels.length).completed%3===0;
  update();const rating=escapeRating(history.length,minimumMoves[levelIndex],sassIndex);if(rating.extra>20)sassIndex++;
- $('result-title').textContent=rating.title;
+ const ending=levelIndex===levels.length-1;
+ $('result-story').hidden=!ending;$('ending-text').textContent=ending?storyEnding.text:'';
+ $('result-title').textContent=ending?storyEnding.title:rating.title;
  $('result-moves').textContent=history.length;$('result-minimum').textContent=minimumMoves[levelIndex];
  $('result-rating').textContent=rating.perfect?'★ PERFECT ESCAPE':`${rating.extra} MOVES FROM PERFECT`;
  $('result-replay').textContent=rating.perfect?'Replay level':'Try for perfect ↻';
  $('result-tip').textContent=rating.perfect?'Every move counted. Perfect score earned!':`Can you escape in ${minimumMoves[levelIndex]} moves? Replay to earn your perfect star.`;
- $('result-text').textContent=`Escaped in ${history.length} moves. ${levelIndex===levels.length-1?'Every escape completed. Beautifully done.':`Level ${levelIndex+2} is now unlocked.`}`;
+ $('result-text').textContent=`Escaped in ${history.length} moves. ${levelIndex===levels.length-1?'All 100 paths completed. Block and Triangle are home together.':`Level ${levelIndex+2} is now unlocked.`}`;
+ if(tipEarned)$('result-text').textContent+=' You earned 1 free Tip!';
  $('result-primary').textContent=levelIndex===levels.length-1?'Back to levels':'Next level ↗';$('result').hidden=false;$('result-primary').focus();tone(520,.25);
 }
 $('result-primary').onclick=()=>{if(phase==='won'){if(levelIndex===levels.length-1)showLevels();else load(levelIndex+1)}};
 $('result-replay').onclick=()=>{if(phase==='won')load(levelIndex)};
-$('result-secondary').onclick=showLevels;$('level-menu').onclick=showLevels;$('continue').onclick=()=>load(unlockedThrough(bests,levels.length));$('restart').onclick=()=>load(levelIndex);
+$('result-secondary').onclick=showLevels;$('level-menu').onclick=showLevels;$('continue').onclick=()=>load(unlockedThrough(bests,levels.length));$('restart').onclick=()=>tutorialIndex===null?load(levelIndex):loadTutorial(tutorialIndex);
 $('sound').onclick=()=>{sound=!sound;try{localStorage.setItem('block-block-sound',sound?'on':'off')}catch{}$('sound').textContent=`♪ ${sound?'ON':'OFF'}`;$('sound').setAttribute('aria-label',sound?'Disable sound':'Enable sound');tone(300)};
 let controlMode='swipe';try{if(localStorage.getItem('block-block-controls')==='arrows')controlMode='arrows'}catch{}
 function applyControls(){
- touch=null;document.querySelector('.direction-pad').hidden=controlMode!=='arrows';document.querySelector('.swipe-label').hidden=controlMode!=='swipe';
+ touch=null;document.querySelector('.direction-pad').hidden=tutorialIndex!==null||controlMode!=='arrows';document.querySelector('.swipe-label').hidden=tutorialIndex===null&&controlMode!=='swipe';
  document.querySelectorAll('[name="controls"]').forEach(input=>input.checked=input.value===controlMode);
- canvas.setAttribute('aria-label',(controlMode==='swipe'?'Swipe':'Use arrow buttons')+' or use keyboard arrows or WASD to roll. R restarts. Escape opens levels.');
+ canvas.setAttribute('aria-label',(tutorialIndex!==null||controlMode==='swipe'?'Swipe':'Use arrow buttons')+' or use keyboard arrows or WASD to roll. R restarts. Escape opens levels.');
  resize();
 }
 let settingsOpenedAt=0;
@@ -110,20 +143,20 @@ function openHelp(){if(completionBusy)return;moveBuffer.clear();helpOpenedAt=per
 $('how-to-play').onclick=openHelp;$('play-help').onclick=openHelp;$('close-help').onclick=()=> $('help-dialog').close();$('help-done').onclick=()=> $('help-dialog').close();
 $('help-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-helpOpenedAt});
 document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>move(b.dataset.dir));
-window.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)||screen!=='play')return;const k=e.key.toLowerCase(),dir={arrowup:'up',arrowdown:'down',arrowleft:'left',arrowright:'right',w:'up',s:'down',a:'left',d:'right'}[k];if(dir){e.preventDefault();move(dir,e.repeat)}else if(k==='r'){load(levelIndex)}else if(k==='escape'){e.preventDefault();showLevels()}});
-canvas.addEventListener('pointerdown',e=>{if(controlMode!=='swipe'||!e.isPrimary||e.button!==0||screen!=='play'||phase!=='playing'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open))return;touch={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointerup',e=>{if(controlMode!=='swipe'||!touch||touch.id!==e.pointerId)return;const dir=swipeDirection(e.clientX-touch.x,e.clientY-touch.y);touch=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(dir)move(dir)});
+window.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open||$('story-dialog').open)||screen!=='play')return;const k=e.key.toLowerCase(),dir={arrowup:'up',arrowdown:'down',arrowleft:'left',arrowright:'right',w:'up',s:'down',a:'left',d:'right'}[k];if(dir){e.preventDefault();move(dir,e.repeat)}else if(k==='r'){tutorialIndex===null?load(levelIndex):loadTutorial(tutorialIndex)}else if(k==='escape'){e.preventDefault();showLevels()}});
+canvas.addEventListener('pointerdown',e=>{if((tutorialIndex===null&&controlMode!=='swipe')||!e.isPrimary||e.button!==0||screen!=='play'||phase!=='playing'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open))return;touch={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointerup',e=>{if((tutorialIndex===null&&controlMode!=='swipe')||!touch||touch.id!==e.pointerId)return;const dir=swipeDirection(e.clientX-touch.x,e.clientY-touch.y);touch=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(dir)move(dir)});
 for(const event of ['pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{if(touch?.id===e.pointerId)touch=null});
 function resize(){
  if(screen!=='play')return;const r=canvas.getBoundingClientRect();width=r.width;height=r.height;const ratio=Math.min(devicePixelRatio||1,2);canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
- const points=[];levels[levelIndex].map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b'||c==='f')for(const dx of [-.5,.5])for(const dz of [-.5,.5])points.push(projectUnits([x+dx,0,z+dz]))}));
+ const points=[];currentBoard().map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b'||c==='f')for(const dx of [-.5,.5])for(const dz of [-.5,.5])points.push(projectUnits([x+dx,0,z+dz]))}));
  const minX=Math.min(...points.map(p=>p[0])),maxX=Math.max(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1]))+projectUnits([0,3,0])[1],maxY=Math.max(...points.map(p=>p[1]))+.3;
  const landscape=height<350;scale=Math.max(1,Math.min((width-28)/(maxX-minX),(height-(landscape?115:80))/(maxY-minY)));
  origin=[width/2-(minX+maxX)*scale/2,(height-(landscape?110:0))/2+15-(minY+maxY)*scale/2];
 }
 window.addEventListener('resize',resize);new ResizeObserver(resize).observe(canvas);
 let installPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('install').hidden=false});$('install').onclick=async()=>{if(!installPrompt)return;await installPrompt.prompt();installPrompt=null;$('install').hidden=true};
-if(!hasNativeStore()&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(location.hostname!=='appassets.androidplatform.net'&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 function project(point){const[x,y]=projectUnits(point);return[origin[0]+x*scale,origin[1]+y*scale]}
 function polygon(points,fill,stroke,lw=1){ctx.beginPath();points.forEach((v,i)=>{const p=project(v);i?ctx.lineTo(...p):ctx.moveTo(...p)});ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.lineJoin='round';ctx.stroke()}}
 const powerColor=(pad,isBridge)=>({grow:'#ffb45e',shrink:'#bc9cff',normal:'#d8f38c',bridge:'#67e0ef',teleport:pad?.pair==='B'?'#78aaff':'#ff75d1'})[pad?.type]??(isBridge?'#67e0ef':'#d8f38c');
@@ -146,7 +179,7 @@ function drawPowerGlyph(x,z,pad,isBridge,time,color){
 }
 function specialTile(x,z,time){
  if(reduced)time=0;
- const l=levels[levelIndex],isBridge=l.map[z][x]==='b';
+ const l=currentBoard(),isBridge=l.map[z][x]==='b';
  if(isBridge&&!state.open){ctx.save();ctx.setLineDash([3,3]);polygon([[x-.45,0,z-.45],[x+.45,0,z-.45],[x+.45,0,z+.45],[x-.45,0,z+.45]],'#6ccddd09','#6ccddd70');ctx.restore();return}
  tile(x,z,x===l.goal[0]&&z===l.goal[1],time);
  if(l.map[z][x]==='f'){
@@ -158,19 +191,20 @@ function specialTile(x,z,time){
  if(pad||isBridge){const color=powerColor(pad,isBridge),pulse=.5+.5*Math.sin(time/330+x*.8+z*.55);ctx.save();ctx.shadowColor=color;ctx.shadowBlur=12+10*pulse;polygon([[x-.40,.02,z-.40],[x+.40,.02,z-.40],[x+.40,.02,z+.40],[x-.40,.02,z+.40]],color+'26',color);ctx.restore();if(pad)drawPowerGlyph(x,z,pad,isBridge,time,color)}
 }
 function completeLanding(time){
- if(activeTip){const previous=activeTip;activeTip=advanceTip(activeTip,state);$('tip-progress').textContent=activeTip?`${activeTip.steps.length} TIP MOVES LEFT`:previous.finishes&&won(levels[levelIndex],state)?'': 'Tip ended. Choose Tip for another preview.';}
+ if(activeTip){const previous=activeTip;activeTip=advanceTip(activeTip,state);$('tip-progress').textContent=activeTip?`${activeTip.steps.length} TIP MOVES LEFT`:previous.finishes&&won(currentBoard(),state)?'': 'Tip ended. Choose Tip for another preview.';}
 
- const l=levels[levelIndex];update();tone(120+sizeOf(state)*35,.035);
+ const l=currentBoard();update();tone(120+sizeOf(state)*35,.035);
  if(!supported(l,state)){phase='falling';$('status').textContent='Watch the edge…';animation={kind:'fall',start:time,duration:reduced?100:520}}
  else if(sizeOf(state)!==2&&cells(state).some(([x,z])=>x===l.goal[0]&&z===l.goal[1])){$('status').textContent='You have to escape as a size 2 block. Find the two-square symbol to return to normal.'}
  else if(won(l,state)){phase='escaping';$('status').textContent='A perfect fit.';animation={kind:'win',start:time,duration:reduced?100:500}}
+ if(tutorialIndex!==null&&!animation)tutorialLanded();
 }
 function tile(x,z,goal,time){const a=x-.47,b=x+.47,c=z-.47,d=z+.47,depth=-.30;polygon([[a,0,d],[b,0,d],[b,depth,d],[a,depth,d]],`hsl(${th.h},22%,20%)`,`hsl(${th.h},25%,16%)`);polygon([[b,0,c],[b,0,d],[b,depth,d],[b,depth,c]],`hsl(${th.h},25%,17%)`,`hsl(${th.h},25%,16%)`);if(goal){polygon([[a,0,c],[b,0,c],[b,0,d],[a,0,d]],`hsl(${th.a},40%,63%)`,`hsl(${th.a},70%,76%)`);polygon([[a+.09,.005,c+.09],[b-.09,.005,c+.09],[b-.09,.005,d-.09],[a+.09,.005,d-.09]],`hsl(${th.h},40%,7%)`);ctx.save();ctx.shadowColor=`hsl(${th.a},75%,72%)`;ctx.shadowBlur=12+4*Math.sin(time/600);polygon([[a+.025,.015,c+.025],[b-.025,.015,c+.025],[b-.025,.015,d-.025],[a+.025,.015,d-.025]],null,`hsl(${th.a},70%,76%)`);ctx.restore()}else{const shade=(x*7+z*13)%4;polygon([[a,0,c],[b,0,c],[b,0,d],[a,0,d]],[39,40,38,41].map(l=>`hsl(${th.h},17%,${l}%)`)[shade],`hsla(${th.h},25%,70%,.40)`);polygon([[a+.07,.006,c+.07],[b-.07,.006,c+.07],[b-.07,.006,d-.07],[a+.07,.006,d-.07]],null,`hsla(${th.a},25%,80%,.07)`);}}
 function vertices(s){const n=sizeOf(s),w=s.o==='x'?n:1,h=s.o==='u'?n:1,d=s.o==='z'?n:1;return [[0,0,0],[w,0,0],[w,0,d],[0,0,d],[0,h,0],[w,h,0],[w,h,d],[0,h,d]].map(([x,y,z])=>[s.x-.5+(x===0?.055:x-.055),y===0?.025:y-.025,s.z-.5+(z===0?.055:z-.055)])}
 function transformed(time){if(!animation)return vertices(state);const a=animation,t=Math.min(1,(time-a.start)/a.duration);if(a.kind==='teleport')return vertices(t<.5?a.from:a.to);if(a.kind==='morph'){const from=vertices(a.from),to=vertices(a.to),e=t*t*(3-2*t);return from.map((v,i)=>v.map((c,j)=>c+(to[i][j]-c)*e))}if(a.kind==='roll'){const eased=t*t*(3-2*t),v=vertices(a.from),s=a.from,w=s.o==='x'?sizeOf(s):1,d=s.o==='z'?sizeOf(s):1;const horizontal=a.dir==='left'||a.dir==='right',pivot=horizontal?(a.dir==='right'?s.x+w-.5:s.x-.5):(a.dir==='down'?s.z+d-.5:s.z-.5),angle=eased*Math.PI/2*(a.dir==='right'||a.dir==='up'?-1:1),co=Math.cos(angle),si=Math.sin(angle);return v.map(([x,y,z])=>{if(horizontal){const q=x-pivot;return[pivot+q*co-y*si,q*si+y*co,z]}const q=z-pivot;return[x,y*co-q*si,pivot+y*si+q*co]})}return vertices(state).map(([x,y,z])=>[x,y-t*t*(a.kind==='win'?3:7),z])}
 function drawBlock(v,alpha=1){const faces=[[0,3,2,1],[0,1,5,4],[3,0,4,7],[1,2,6,5],[2,3,7,6],[4,5,6,7]],colors=[41,63,55,65,55,80].map(l=>`hsl(${th.a},${l>70?60:40}%,${l}%)`);const ordered=faces.map((f,i)=>({f,i,depth:f.reduce((sum,j)=>sum+cameraDepth(v[j]),0)/4})).sort((a,b)=>a.depth-b.depth);ctx.save();ctx.globalAlpha=alpha;for(const {f,i}of ordered){const points=f.map(j=>v[j]);const ys=points.map(p=>project(p)[1]),material=ctx.createLinearGradient(0,Math.min(...ys),0,Math.max(...ys)+1);material.addColorStop(0,colors[i]);material.addColorStop(1,`hsl(${th.a},35%,${[35,54,48,56,48,72][i]}%)`);polygon(points,material,`hsl(${th.a},75%,88%)`,Math.max(.7,scale*.018));const center=points.reduce((c,p)=>c.map((n,j)=>n+p[j]/4),[0,0,0]);polygon(points.map(p=>p.map((n,j)=>center[j]+(n-center[j])*.83)),null,`hsla(${th.a},90%,96%,.22)`,Math.max(.6,scale*.012));}ctx.restore()}
 function frame(time){confetti(time);if(document.hidden||screen!=='play'||($('help-dialog').open||$('settings-dialog').open||$('tip-dialog').open)){requestAnimationFrame(frame);return}ctx.clearRect(0,0,width,height);const bg=ctx.createRadialGradient(width*.5,height*.52,10,width*.5,height*.5,width*.6);bg.addColorStop(0,`hsl(${th.h},25%,19%)`);bg.addColorStop(1,`hsl(${th.h},30%,11%)`);ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=`hsla(${th.a},30%,75%,.05)`;for(let x=18;x<width;x+=26)for(let y=16;y<height;y+=26){ctx.beginPath();ctx.arc(x,y,.7,0,Math.PI*2);ctx.fill()}
- const l=levels[levelIndex],tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b'||c==='f')tiles.push([x,z])}));tiles.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
+ const l=currentBoard(),tiles=[];l.map.forEach((row,z)=>[...row].forEach((c,x)=>{if(c==='1'||c==='b'||c==='f')tiles.push([x,z])}));tiles.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  ctx.save();ctx.filter='blur(15px)';ctx.beginPath();for(const[x,z]of tiles){[[x-.5,-.65,z-.5],[x+.5,-.65,z-.5],[x+.5,-.65,z+.5],[x-.5,-.65,z+.5]].forEach((p,i)=>i?ctx.lineTo(...project(p)):ctx.moveTo(...project(p)));ctx.closePath()}ctx.fillStyle='#00000030';ctx.fill();ctx.restore();
  const dropping=animation&&(animation.kind==='fall'||animation.kind==='win');if(dropping)drawBlock(transformed(time),Math.max(0,1-(time-animation.start)/animation.duration));
  for(const[x,z]of tiles)specialTile(x,z,time);
@@ -188,17 +222,17 @@ function frame(time){confetti(time);if(document.hidden||screen!=='play'||($('hel
    }
    if(!animation)completeLanding(time);
  }else if(a.kind==='morph'||a.kind==='teleport')completeLanding(time);else finish(a.kind==='win')}
+ if(tutorialDemoPending&&time>=tutorialDemoAt&&!animation&&phase==='playing'){tutorialDemoPending=false;tutorialDemoRunning=true;$('tutorial-hand').classList.add('demo-playing');move(tutorialLessons[tutorialIndex].dir,false,true)}
  if(!animation&&phase==='playing'){const buffered=moveBuffer.take();if(buffered)move(buffered)}
  requestAnimationFrame(frame)}
 let tipOpenedAt=0;
-function tipButtons(disabled){for(const id of ['tip-use','tip-ad','tip-buy','close-tip','tip-hide'])$(id).disabled=disabled}
+function tipButtons(disabled){for(const id of ['tip-use','close-tip','tip-hide'])$(id).disabled=disabled}
 async function refreshTipStore(){
  $('tip-hide').hidden=!activeTip;
- if(!hasNativeStore()){$('tip-store-status').textContent='Tip purchases and rewarded ads are available in the Android app.';for(const id of ['tip-use','tip-ad','tip-buy'])$(id).disabled=true;return}
- try{const info=await storeRequest('status');$('tip-balance').textContent=`${info.credits} Tips available`;$('tip-use').disabled=info.credits<1||!tipCandidate;$('tip-buy').textContent=info.price?`Buy 5 Tips · ${info.price}`:'Purchases unavailable';$('tip-buy').disabled=!info.price;$('tip-ad').disabled=!info.ads||!tipCandidate;$('tip-ad').textContent=info.testAds?'Watch a test ad · earn 1 Tip':'Watch an ad · earn 1 Tip'}catch(e){$('tip-store-status').textContent=e.message}
+ try{const info=tipWallet.status(bests,levels.length);$('tip-balance').textContent=`${info.credits} ${info.credits===1?'Tip':'Tips'} available`;$('tip-use').disabled=info.credits<1||!tipCandidate;$('tip-earning').textContent=info.untilNext?`Complete ${info.untilNext} more new level${info.untilNext===1?'':'s'} to earn your next free Tip.`:'You have earned all 33 campaign Tips.';}catch(e){$('tip-use').disabled=true;$('tip-store-status').textContent=e.message;}
 }
 $('tip-button').onclick=async()=>{
- if(phase!=='playing'||animation)return;
+ if(tutorialIndex!==null||phase!=='playing'||animation)return;
  moveBuffer.clear();tipCandidate=planTip(levels[levelIndex],state);tipOpenedAt=performance.now();touch=null;
  $('tip-store-status').textContent='';$('tip-description').textContent=tipCandidate?`Reveal the next ${tipCandidate.steps.length} moves${tipCandidate.finishes?' to the exit':''}. Follow the numbered shadow trail. A different move or restart clears it. One Tip unlocks this preview.`:'There is no route to the exit from this position. Restart this level before using a Tip. No credit will be spent.';
  $('tip-dialog').showModal();await refreshTipStore();
@@ -207,15 +241,14 @@ $('close-tip').onclick=()=>{if(!tipBusy)$('tip-dialog').close()};
 $('tip-dialog').addEventListener('cancel',e=>{if(tipBusy)e.preventDefault()});
 $('tip-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-tipOpenedAt});
 $('tip-hide').onclick=()=>{activeTip=null;$('tip-progress').textContent='';$('tip-dialog').close()};
-async function tipAction(action){
- if(tipBusy||action==='spend'&&!tipCandidate)return;
- tipBusy=true;tipButtons(true);$('tip-store-status').textContent=action==='ad'?'Loading your rewarded ad…':action==='buy'?'Opening Google Play…':'Revealing your trail…';
- try{const result=await storeRequest(action);if(action==='spend'&&result.spent){activeTip=tipCandidate;$('tip-progress').textContent=`${activeTip.steps.length} TIP MOVES LEFT`;$('tip-dialog').close()}else $('tip-store-status').textContent=result.message??'Your Tip balance has been updated.'}
- catch(e){$('tip-store-status').textContent=e.message}
- finally{tipBusy=false;tipButtons(false);await refreshTipStore()}
+async function tipAction(){
+ if(tipBusy||!tipCandidate)return;
+ tipBusy=true;tipButtons(true);$('tip-store-status').textContent='';
+ try{if(tipWallet.spend(bests,levels.length)){activeTip=tipCandidate;$('tip-progress').textContent=`${activeTip.steps.length} TIP MOVES LEFT`;$('tip-dialog').close();}else $('tip-store-status').textContent='Complete three different levels to earn a free Tip.';}
+ catch(e){$('tip-store-status').textContent='Your Tip could not be saved. No Tip was spent. '+e.message;}
+ finally{tipBusy=false;tipButtons(false);await refreshTipStore();}
 }
-$('tip-use').onclick=()=>tipAction('spend');$('tip-ad').onclick=()=>tipAction('ad');$('tip-buy').onclick=()=>tipAction('buy');
-$('privacy-options').hidden=!hasNativeStore();$('privacy-options').onclick=async()=>{try{await storeRequest('privacy')}catch(e){$('status').textContent=e.message}};
+$('tip-use').onclick=tipAction;
 function drawTip(time){
  if(!activeTip?.steps.length)return;
  ctx.save();ctx.strokeStyle='#b4ddff';ctx.fillStyle='#d9eeff';ctx.lineWidth=2;ctx.shadowColor='#77bcff';ctx.shadowBlur=5;ctx.setLineDash([4,5]);
@@ -225,7 +258,18 @@ function drawTip(time){
  ctx.restore();const index=reduced?0:Math.floor(time/1000)%activeTip.steps.length;drawBlock(vertices(activeTip.steps[index].to),.20);
 }
 document.addEventListener('visibilitychange',()=>{moveBuffer.clear();touch=null;if(document.hidden){hiddenAt=performance.now();audio?.suspend()}else{if(animation&&hiddenAt!==null&&!document.querySelector('dialog[open]'))animation.start+=performance.now()-hiddenAt;hiddenAt=null;if(sound)audio?.resume()}});
-showLevels();requestAnimationFrame(frame);
+let storyPage=0,storyOpenedAt=0;
+const availableStory=()=>storyPages(bests,levels.length);
+function renderStory(){const pages=availableStory(),beat=pages[storyPage];$('story-position').textContent=beat===storyEnding?'HOME TOGETHER':`WORLD ${storyPage+1} · OUR STORY SO FAR`;$('story-heading').textContent=beat.title;$('story-copy').textContent=beat.text;$('story-previous').disabled=storyPage===0;$('story-next').disabled=storyPage===pages.length-1;}
+$('story-recap').onclick=()=>{storyOpenedAt=performance.now();storyPage=availableStory().length-1;renderStory();$('story-dialog').showModal()};
+$('story-previous').onclick=()=>{if(storyPage>0){storyPage--;renderStory()}};
+$('story-next').onclick=()=>{if(storyPage<availableStory().length-1){storyPage++;renderStory()}};
+$('close-story').onclick=$('story-done').onclick=()=>$('story-dialog').close();
+$('story-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-storyOpenedAt});
+$('world').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();$('world-continue').focus()}});
+showLevels();
+try{if(Object.keys(bests).length===0&&!localStorage.getItem('block-block-tutorial'))$('tutorial-offer').showModal()}catch{}
+requestAnimationFrame(frame);
 
 
 

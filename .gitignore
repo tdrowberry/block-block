@@ -18,3 +18,5 @@ android/local.properties
 android/release.properties
 *.jks
 *.keystore
+*.p12
+*.password.protected

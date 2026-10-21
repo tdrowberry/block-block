@@ -9,11 +9,11 @@ window.addEventListener('block-block-store',event=>{
  result.error?request.reject(new Error(result.error)):request.resolve(result);
 });
 export const hasNativeStore=()=>Boolean(native());
-export function storeRequest(action){
+export function storeRequest(action,productId){
  if(!native())return Promise.reject(new Error('Tips are available in the Android app.'));
  return new Promise((resolve,reject)=>{
   const id=String(++serial),timer=setTimeout(()=>{pending.delete(id);reject(new Error('The store took too long. Try again; any earned credits are kept.'))},180000);
   pending.set(id,{resolve,reject,timer});
-  try{native().request(JSON.stringify({id,action}))}catch(error){clearTimeout(timer);pending.delete(id);reject(error)}
+  try{native().request(JSON.stringify({id,action,...(productId?{productId}:{})}))}catch(error){clearTimeout(timer);pending.delete(id);reject(error)}
  });
 }
