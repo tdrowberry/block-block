@@ -1,131 +1,262 @@
-# Block Block — Every Shape Belongs
+# Block Block — animated story
 
-A gentle story about a father, his triangle son, and finding the way home.
+A captioned movie about a father and son finding their way home. Scenes unlock at the start of each five-level world; the happy ending unlocks after completing level 100. Story line plays unlocked clips in order. Every clip can also be paused or replayed on its own.
 
-![Block and Triangle together](family.svg)
+## 1. A little triangle, a big feeling
 
-## World 1 · Levels 1–5
+Before level 1 · 26 seconds
 
-### A little triangle, a big feeling
+**Block:** Ready for another adventure, little one?
 
-Block loves his triangle son more than anything. But Triangle wonders, “Dad has corners like a block. I look different. Do I belong?” He sets off to find a place where he fits, leaving a little note. Block reads it and follows: “You belong with me, little one.”
+**Triangle thinks:** Dad has four corners. I only have three. Do I belong?
 
-## World 2 · Levels 6–10
+**Triangle thinks:** Maybe I should find somewhere I fit.
 
-### Following little footsteps
+**Triangle:** I love you, Dad. I just need to find my place.
 
-A neighbor saw Triangle heading toward the ocean, looking for shapes like his own. Block follows the path. He wants to tell his son something simple: families do not have to look alike to belong together.
+**Block:** Triangle? Where did you go?
 
-## World 3 · Levels 11–15
+## 2. Following little footsteps
 
-### A message in the sand
+Before level 6 · 21 seconds
 
-Beside the water, Block finds a triangle drawn in the sand. He draws a block beside it and a heart around them both. “Different shapes. Same family,” he says, and keeps looking.
+**Block reads:** “I went to find somewhere I belong.” Oh, little one…
 
-## World 4 · Levels 16–20
+**Block:** I need to find my son and bring him home.
 
-### Room to grow
+**Neighbor:** I saw him heading toward the ocean. Follow the little footprints.
 
-Triangle has stopped in a garden full of tall and tiny plants. Block learns to change size as he crosses it. Big or small, he is still Dad. And wherever Triangle goes, he will still be his son.
+**Block:** Thank you! Triangle, I’m on my way.
 
-## World 5 · Levels 21–25
+## 3. A message in the sand
 
-### Making a way
+Before level 11 · 21 seconds
 
-A friendly traveler points toward the bridges. “Your little triangle helped me find my way,” they tell Block. Block smiles. His son has always had a kind heart.
+**Triangle thinks:** Maybe the sea knows a place for a triangle.
 
-## World 6 · Levels 26–30
+**Triangle thinks:** I miss Dad already.
 
-### A bridge between us
+**Block:** That’s his drawing! I’ll add something beside it.
 
-Across the bridges, Block finds another note: “I wish I could be more like you, Dad.” “You never need to change for me,” Block says softly. He carries the note close and rolls onward.
+**Block:** Different shapes. Same family.
 
-## World 7 · Levels 31–35
+## 4. Room to grow
 
-### Farther than the horizon
+Before level 16 · 21 seconds
 
-Triangle has followed the shining paths to a new world. Block asks friendly shapes for directions. Each one helps him along. There is room in the world for every shape.
+**Triangle:** Tall flowers, tiny flowers… you all fit together.
 
-## World 8 · Levels 36–40
+**Triangle thinks:** Could I fit in, just as I am?
 
-### Through the bright doorway
+**Block:** Big or small, every flower belongs in this garden.
 
-A glowing portal leads Block onward. Before stepping through, he leaves a message for his son: “I love your three corners. I love your big ideas. I love you.”
+**Block:** And you will always be my son.
 
-## World 9 · Levels 41–45
+## 5. Making a way
 
-### Small, careful steps
+Before level 21 · 21 seconds
 
-The path ahead needs gentle steps. Block takes his time, remembering how Triangle first learned to hop. They were different steps from his own, and he loved cheering for every one.
+**Traveler:** Your little triangle helped me find the bridge.
 
-## World 10 · Levels 46–50
+**Block:** That sounds like him. He has such a kind heart.
 
-### A place to rest
+**Traveler:** He went that way. You’re getting closer!
 
-Friendly shapes invite Block to rest in their garden. A circle, a square, and a triangle share a picnic. “Belonging is being welcomed,” they say. Block cannot wait to welcome his son home.
+**Block:** Thank you. I’ll keep going!
 
-## World 11 · Levels 51–55
+## 6. A bridge between us
 
-### The shape of a family
+Before level 26 · 21 seconds
 
-Block finds a drawing Triangle made: the two of them beneath their roof. Triangle has written, “Do I still fit here?” Block knows his answer: “Always. Our home has room for you, exactly as you are.”
+**Triangle:** I wish I could be more like you, Dad.
 
-## World 12 · Levels 56–60
+**Triangle thinks:** Maybe then I would fit.
 
-### Love keeps going
+**Block reads:** “I wish I could be more like you.”
 
-There are still paths to cross, but Block keeps going at his own pace. Each puzzle brings him closer to his son. He practices the words he wants to say: “You are loved. You belong. I am here.”
+**Block:** You never need to change for me, little one.
 
-## World 13 · Levels 61–65
+## 7. Farther than the horizon
 
-### Look with your heart
+Before level 31 · 21 seconds
 
-Some paths look different when Block turns around. He remembers all the things he and Triangle share: silly songs, bedtime stories, and warm hugs. None of those things need matching corners.
+**Block:** Have you seen a little golden triangle?
 
-## World 14 · Levels 66–70
+**Friends:** Yes! He followed the shining path.
 
-### A familiar little song
+**Block:** Thank you for helping us find each other.
 
-A familiar song drifts across the next world. It is the tune Block and Triangle hum together at home. Block follows with a smile, humming his part so his son might hear.
+**Block:** There is room here for every shape.
 
-## World 15 · Levels 71–75
+## 8. Through the bright doorway
 
-### Almost close enough
+Before level 36 · 21 seconds
 
-Triangle hears a familiar hum. Could Dad have come all this way for him? He leaves a bright ribbon on the path. Block recognizes it from their favorite kite and follows it onward.
+**Triangle:** A bright doorway! I wonder where it leads.
 
-## World 16 · Levels 76–80
+**Triangle thinks:** One more place to look…
 
-### Your very own shape
+**Block:** I’ll leave him a message before I follow.
 
-Block meets a friend who has been talking with Triangle. “He thinks he needs four corners to make you proud.” Block shakes his head gently. “I am already proud of him. Three corners and all.”
+**Block:** I love your three corners. I love your big ideas. I love you.
 
-## World 17 · Levels 81–85
+## 9. Small, careful steps
 
-### A message finds its way
+Before level 41 · 21 seconds
 
-The friend carries Block’s words ahead: “You are my son. I love you just as you are.” Triangle reads the message twice, then smiles a little. Maybe home was his place all along.
+**Block:** These little stepping stones remind me of something…
 
-## World 18 · Levels 86–90
+**Block remembers:** Your very first hop! I was so proud.
 
-### Waiting by the garden
+**Block:** Your steps were different from mine. They were wonderful.
 
-Triangle sends a note back: “I’m by the garden. Can we go home together?” “Of course,” says Block. The last paths wind toward a quiet place where they can talk and share a hug.
+**Block:** One careful step at a time. I’m coming, little one.
 
-## World 19 · Levels 91–95
+## 10. A place to rest
 
-### No need to be the same
+Before level 46 · 21 seconds
 
-Across the garden, Triangle spots Dad. “Will you still love me if I always look different?” he calls. “Every single day,” Block answers. “You never have to be a block to belong with me.”
+**Friends:** Come rest with us, Block.
 
-## World 20 · Levels 96–100
+**Block:** You’re all different shapes, and you look so happy together.
 
-### The way back to each other
+**Friends:** Belonging means being welcomed. There’s a place for you too!
 
-Just a few little paths remain. Triangle waits by the flowers, humming their song. Block rolls closer. Soon he can tell his son face to face: “You are my family. You are loved. Let’s go home together.”
+**Block:** I can’t wait to welcome my son home.
 
-## Ending · After level 100
+## 11. The shape of a family
 
-### Home is where you are loved
+Before level 51 · 21 seconds
 
-Block wraps his triangle son in a warm hug. “I thought I didn’t belong,” Triangle says. “You always belong with me,” Dad replies. “I love you exactly as you are.” They go home together, share their favorite snack, and curl up for a bedtime story. Different shapes. One happy family.
+**Triangle:** Our house. Dad. Me…
+
+**Triangle thinks:** Do I still fit here?
+
+**Block:** A drawing of our home! I know the answer.
+
+**Block:** Always. Our home has room for you, exactly as you are.
+
+## 12. Love keeps going
+
+Before level 56 · 21 seconds
+
+**Block:** There are still a few paths ahead.
+
+**Block:** You are loved.
+
+**Block:** You belong.
+
+**Block:** And I am here. I’ll keep looking for you.
+
+## 13. Look with your heart
+
+Before level 61 · 21 seconds
+
+**Block:** What makes us a family?
+
+**Block remembers:** Our silly songs…
+
+**Block remembers:** Our bedtime stories. Our warm hugs.
+
+**Block:** None of those things need matching corners.
+
+## 14. A familiar little song
+
+Before level 66 · 21 seconds
+
+**Triangle hums:** Hmm-hmm… our little bedtime song.
+
+**Triangle thinks:** I wish Dad were here to sing his part.
+
+**Block:** I know that song!
+
+**Block hums:** Hmm-hmm… I’m right here, little one.
+
+## 15. Almost close enough
+
+Before level 71 · 21 seconds
+
+**Triangle:** That sounds like Dad!
+
+**Triangle thinks:** Did he really come all this way for me?
+
+**Triangle:** I’ll leave our kite ribbon so he can find me.
+
+**Block:** Our bright ribbon! I’m getting closer.
+
+## 16. Your very own shape
+
+Before level 76 · 21 seconds
+
+**Friend:** Triangle thinks he needs four corners to make you proud.
+
+**Block:** Oh, no. I’m already proud of him!
+
+**Block:** Three corners, a kind heart, and his very own ideas.
+
+**Friend:** I’ll tell him. Wait until he hears!
+
+## 17. A message finds its way
+
+Before level 81 · 21 seconds
+
+**Friend:** Triangle! Your dad sent you a message.
+
+**Triangle reads:** “You are my son. I love you just as you are.”
+
+**Triangle:** Just as I am? Three corners and everything?
+
+**Triangle:** Maybe home was my place all along.
+
+## 18. Waiting by the garden
+
+Before level 86 · 21 seconds
+
+**Triangle writes:** “I’m by the garden. Can we go home together?”
+
+**Friend:** I’ll take your note to him!
+
+**Block reads:** “Can we go home together?” Of course we can!
+
+**Block:** I’m nearly there!
+
+## 19. No need to be the same
+
+Before level 91 · 21 seconds
+
+**Triangle:** Dad! I can see you!
+
+**Triangle:** Will you still love me if I always look different?
+
+**Block:** Every single day.
+
+**Block:** You never have to be a block to belong with me.
+
+## 20. The way back to each other
+
+Before level 96 · 21 seconds
+
+**Triangle:** I’ll wait right here by the flowers.
+
+**Block:** Just a few little paths left!
+
+**Triangle hums:** Hmm-hmm… our song sounds better together.
+
+**Block:** You are my family. You are loved. Let’s go home.
+
+## 21. Home is where you are loved
+
+After level 100 · 31 seconds
+
+**Triangle:** Dad! I thought I didn’t belong.
+
+**Block:** You always belong with me. I love you exactly as you are.
+
+**Triangle:** Let’s go home together.
+
+**Block:** Your favorite snack, and then a bedtime story?
+
+**Triangle:** Yes, Dad. There’s no place I’d rather be.
+
+**Together:** Different shapes. One happy family.
+

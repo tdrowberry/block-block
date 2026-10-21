@@ -1,4 +1,5 @@
 import './story.test.js';
+import './cutscenes.test.js';
 import './master.test.js';
 import './tips.test.js';
 import './motion.test.js';

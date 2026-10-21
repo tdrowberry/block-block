@@ -98,3 +98,9 @@ No ads, purchases, age screen or tracking SDKs. Earn one free Tip per three dist
 ## A story about belonging
 
 Block searches for his triangle son, who has set out because he feels different. Twenty gentle story scenes follow the five-level worlds. The ending reunites father and son and brings them home together. There are no villains, police, kidnapping, or combat. Story scenes wait for Continue; Story line beside Settings opens reached scenes from the beginning, with Previous and Next controls; the ending unlocks after level 100. Small Scene buttons beneath levels 1, 6, 11, and each later world opening jump straight to that scene. Completing level 100 also adds its ending replay button. Existing puzzles, scores, and tutorials are preserved. The family artwork and story are included in the offline cache and Android asset copy.
+
+## Animated story scenes (1.4.0)
+
+Twenty captioned animated clips and a final reunion replace the static story cards. The rigid green Block and golden Triangle move, gesture, leave notes, follow clues, and hug in illustrated world settings. `cutscenes.js` contains the shots and dialogue; `film-player.js` draws the characters and drives one shared animation/caption clock. No voice tracks or video downloads are needed, and the clips work offline.
+
+World-opening levels play their clip before the puzzle. Scene buttons replay a single clip. Story line plays all reached clips continuously from the beginning, stopping at the unlocked frontier; completing level 100 unlocks the complete movie and automatically shows the reunion. Pause, replay, next-caption, previous/next-scene and exit controls remain available. Backgrounding freezes the clock, and reduced-motion preferences suppress character motion.

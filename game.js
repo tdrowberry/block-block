@@ -1,3 +1,5 @@
+import {createFilmPlayer} from './film-player.js';
+import {nextFilm} from './cutscenes.js';
 import {planTip,advanceTip} from './tips.js';
 import {createTipWallet,tipStatus} from './free-tips.js';
 const tipWallet=createTipWallet({getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
@@ -26,15 +28,11 @@ const themes=[['Moss',150,80],['Ocean',205,175],['Sunset',20,40],['Grape',275,30
 const themeOf=i=>{const[name,h,a]=themes[Math.floor(i/5)%themes.length];return{name,h,a}};
 let th=themeOf(0);
 function applyTheme(i){th=themeOf(i);const r=document.documentElement.style;r.setProperty('--accent',`hsl(${th.a},55%,74%)`);r.setProperty('--bgc',`hsl(${th.h},30%,12%)`);document.querySelector('meta[name=theme-color]').content=`hsl(${th.h},30%,12%)`}
+const worldFilm=createFilmPlayer($('world-film'),{reduced});
 let splashFor=-1,splashTimer=0,bits=[];const cv=$('confetti'),cctx=cv?.getContext('2d');
-function hideWorld(){clearTimeout(splashTimer);if($('world'))$('world').hidden=true;if(phase==='splash')phase='playing'}
+function hideWorld(){worldFilm.stop();clearTimeout(splashTimer);if($('world'))$('world').hidden=true;if(phase==='splash')phase='playing'}
 function showWorld(i){
- if(!$('world')||!cv)return;
- const beat=storyForLevel(i);splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1} · ${th.name.toUpperCase()}`;$('world-name').textContent=beat.title;$('world-story').textContent=beat.text;$('world').hidden=false;$('world-continue').focus();
- if(reduced)return;
- const ratio=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;cv.width=w*ratio;cv.height=h*ratio;cctx.setTransform(ratio,0,0,ratio,0,0);
- const hues=[th.a,th.h,(th.a+40)%360,(th.h+180)%360];bits=[];
- for(let n=0;n<150;n++){const side=n%2?1:-1,ang=-Math.PI/2+side*(.15+Math.random()*.7),sp=(.55+Math.random()*.6)*Math.min(h,900)*.021;bits.push({x:w/2+side*w*.42,y:h*.85,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,s:4+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*.4,c:n%9===0?'#fff':`hsl(${hues[n%4]},80%,${55+Math.random()*20}%)`,life:1})}
+ const beat=storyForLevel(i);splashFor=i;phase='splash';$('world-num').textContent=`WORLD ${Math.floor(i/5)+1} · ${th.name.toUpperCase()}`;$('world-name').textContent=beat.title;$('world').hidden=false;worldFilm.load(Math.floor(i/5));$('world-continue').focus();
 }
 let lastConf=0;
 function confetti(time){
@@ -114,7 +112,7 @@ async function finish(success){
  const tipEarned=firstClear&&tipStatus(bests,levels.length).completed%3===0;
  update();const rating=escapeRating(history.length,minimumMoves[levelIndex],sassIndex);if(rating.extra>20)sassIndex++;
  const ending=levelIndex===levels.length-1;
- $('result-story').hidden=!ending;$('ending-text').textContent=ending?storyEnding.text:'';
+ $('result-story').hidden=!ending;
  $('result-title').textContent=ending?storyEnding.title:rating.title;
  $('result-moves').textContent=history.length;$('result-minimum').textContent=minimumMoves[levelIndex];
  $('result-rating').textContent=rating.perfect?'★ PERFECT ESCAPE':`${rating.extra} MOVES FROM PERFECT`;
@@ -122,7 +120,7 @@ async function finish(success){
  $('result-tip').textContent=rating.perfect?'Every move counted. Perfect score earned!':`Can you escape in ${minimumMoves[levelIndex]} moves? Replay to earn your perfect star.`;
  $('result-text').textContent=`Escaped in ${history.length} moves. ${levelIndex===levels.length-1?'All 100 paths completed. Block and Triangle are home together.':`Level ${levelIndex+2} is now unlocked.`}`;
  if(tipEarned)$('result-text').textContent+=' You earned 1 free Tip!';
- $('result-primary').textContent=levelIndex===levels.length-1?'Back to levels':'Next level ↗';$('result').hidden=false;$('result-primary').focus();tone(520,.25);
+ $('result-primary').textContent=levelIndex===levels.length-1?'Back to levels':'Next level ↗';$('result').hidden=false;$('result-primary').focus();tone(520,.25);if(ending)openStory(storyWorlds.length);
 }
 $('result-primary').onclick=()=>{if(phase==='won'){if(levelIndex===levels.length-1)showLevels();else load(levelIndex+1)}};
 $('result-replay').onclick=()=>{if(phase==='won')load(levelIndex)};
@@ -262,16 +260,26 @@ function drawTip(time){
  ctx.restore();const index=reduced?0:Math.floor(time/1000)%activeTip.steps.length;drawBlock(vertices(activeTip.steps[index].to),.20);
 }
 document.addEventListener('visibilitychange',()=>{moveBuffer.clear();touch=null;if(document.hidden){hiddenAt=performance.now();audio?.suspend()}else{if(animation&&hiddenAt!==null&&!document.querySelector('dialog[open]'))animation.start+=performance.now()-hiddenAt;hiddenAt=null;if(sound)audio?.resume()}});
-let storyPage=0,storyOpenedAt=0;
+let storyPage=0,storyOpenedAt=0,storyContinuous=false;
 const availableStory=()=>storyPages(bests,levels.length);
-function renderStory(){const pages=availableStory(),beat=pages[storyPage];$('story-position').textContent=beat===storyEnding?'HOME TOGETHER':`WORLD ${storyPage+1} · OUR STORY SO FAR`;$('story-heading').textContent=beat.title;$('story-copy').textContent=beat.text;$('story-previous').disabled=storyPage===0;$('story-next').disabled=storyPage===pages.length-1;}
-function openStory(page=availableStory().length-1){storyOpenedAt=performance.now();storyPage=page;renderStory();$('story-dialog').showModal()}
-$('story-recap').onclick=()=>openStory(0);
+const storyFilm=createFilmPlayer($('story-film'),{reduced,onEnded:()=>{
+ const pages=availableStory(),next=nextFilm(storyPage,pages.length,storyContinuous);
+ if(next!==null){storyPage=next;renderStory()}else storyFilm.setStatus(storyPage===storyWorlds.length?'The end · Different shapes. One family.':storyContinuous?'More scenes unlock as you play.':'Scene complete · Replay or choose another scene.');
+}});
+function renderStory(){const pages=availableStory(),beat=pages[storyPage];$('story-position').textContent=`${storyPage+1} / ${pages.length} UNLOCKED SCENES · ${storyContinuous?'MOVIE MODE':'SINGLE CLIP'}`;$('story-heading').textContent=beat.title;$('story-previous').disabled=storyPage===0;$('story-next').disabled=storyPage===pages.length-1;storyFilm.load(storyPage)}
+function openStory(page=0,continuous=false){storyOpenedAt=performance.now();storyPage=Math.max(0,Math.min(page,availableStory().length-1));storyContinuous=continuous;moveBuffer.clear();$('story-dialog').showModal();renderStory()}
+$('story-recap').onclick=()=>openStory(0,true);
+$('watch-ending').onclick=()=>openStory(storyWorlds.length);
+$('story-watch-all').onclick=()=>{storyPage=0;storyContinuous=true;renderStory()};
 $('story-previous').onclick=()=>{if(storyPage>0){storyPage--;renderStory()}};
 $('story-next').onclick=()=>{if(storyPage<availableStory().length-1){storyPage++;renderStory()}};
 $('close-story').onclick=$('story-done').onclick=()=>$('story-dialog').close();
-$('story-dialog').addEventListener('close',()=>{if(animation)animation.start+=performance.now()-storyOpenedAt});
-$('world').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();$('world-continue').focus()}});
+$('story-dialog').addEventListener('close',()=>{storyFilm.stop();if(animation)animation.start+=performance.now()-storyOpenedAt});
+$('world').addEventListener('keydown',e=>{
+ e.stopPropagation();
+ if(e.key==='Escape'){e.preventDefault();$('world-continue').click()}
+ if(e.key==='Tab'){const buttons=[...$('world').querySelectorAll('button:not(:disabled)')],first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}
+});
 showLevels();
 try{if(Object.keys(bests).length===0&&!localStorage.getItem('block-block-tutorial'))$('tutorial-offer').showModal()}catch{}
 requestAnimationFrame(frame);
