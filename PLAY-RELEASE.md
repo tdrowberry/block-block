@@ -40,4 +40,6 @@ Build with android/build-play-release.ps1. The helper reads the version from app
 
 Verification: 152 JavaScript tests pass; Android bundle build and lint pass (0 errors, 2 existing warnings). The signed bundle's index.html, game.js, story.js, family.svg, style.css, tutorial.js, free-tips.js and progress.js were compared byte for byte with current source. Package com.lalaolemur.blockblock, version code 4, version name 1.3.0 were verified from generated BuildConfig. No story-related permissions or data collection were added.
 
-Play upload and review status must be recorded after confirmation in Play Console. The existing track is Closed testing; production release is not part of this update.
+Play Console accepted version code 4 / version 1.3.0 and saved “1.3.0 — Every shape belongs” to Closed testing - Alpha. Publishing overview showed one change not yet submitted for review, with quick checks running. The only release validation warning was a missing optional deobfuscation file; minifyEnabled is false. No review submission or public production release was performed. The owner took over Chrome to finish submission. Updated store description text is prepared in release-assets/store-listing.txt but was not applied in Play Console. The existing live closed test remains version 1.2.0 until the new release is reviewed and rolled out.
+
+Signed 1.3.0 bundle SHA-256: 5662ba9f82ea05c595113a4681cb57dd58a95708aafaf4da8214961b78c8e6ca. Source release pushed to origin/main at 6dedd2c.
