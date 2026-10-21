@@ -1,0 +1,7 @@
+<en-US>
+Replay your favorite moments with Block and Triangle.
+• Tap Scene beneath a story level to revisit its scene.
+• Open Story line beside Settings to read unlocked scenes in order.
+• Finish level 100 to replay the whole story, including the happy ending.
+Your saved progress and Tips are preserved.
+</en-US>
