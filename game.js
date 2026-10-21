@@ -50,7 +50,11 @@ function renderLevels(){
   const chapter=document.createElement('section');chapter.className='chapter';const title=document.createElement('h3');title.className='chapter-heading';title.textContent=chapterNames[start/10];chapter.append(title);const tally=document.createElement('span');tally.className='chapter-count';tally.textContent=`${levels.slice(start,start+10).filter((_,j)=>bests[scoreKey(start+j)]!=null).length} / ${Math.min(10,levels.length-start)}`;title.append(tally);
   const grid=document.createElement('div');grid.className='chapter-grid';chapter.append(grid);
   levels.slice(start,start+10).forEach((l,j)=>{const i=start+j,unlocked=canPlay(bests,i,levels.length),cleared=bests[scoreKey(i)]!=null,b=document.createElement('button');b.className=`level-button${cleared?' completed':''}${i===frontier&&!cleared?' current':''}`;b.disabled=!unlocked;b.setAttribute('aria-label',`Level ${i+1}: ${l.name}, ${!unlocked?(cleared?'completed, locked':'locked'):cleared?'completed':'available'}`);const perfect=cleared&&bests[scoreKey(i)]===minimumMoves[i];b.classList.toggle('perfect',perfect);if(perfect)b.setAttribute('aria-label',`Level ${i+1}: ${l.name}, perfect${!unlocked?', locked':''}`);b.title=`Minimum: ${minimumMoves[i]} moves${cleared?` · Best: ${bests[scoreKey(i)]}`:''}`;
-   const number=document.createElement('span');number.className='level-number';number.textContent=String(i+1).padStart(2,'0');const badge=document.createElement('span');badge.className='level-state';badge.textContent=cleared?(!unlocked?'✓ 🔒':perfect?'★ PERFECT':'✓ DONE'):!unlocked?'🔒':'PLAY';b.append(number,badge);{const t=themeOf(i);b.style.setProperty('--t',`hsl(${t.a},55%,62%)`)}b.onclick=()=>load(i);grid.append(b);
+   const number=document.createElement('span');number.className='level-number';number.textContent=String(i+1).padStart(2,'0');const badge=document.createElement('span');badge.className='level-state';badge.textContent=cleared?(!unlocked?'✓ 🔒':perfect?'★ PERFECT':'✓ DONE'):!unlocked?'🔒':'PLAY';b.append(number,badge);{const t=themeOf(i);b.style.setProperty('--t',`hsl(${t.a},55%,62%)`)}b.onclick=()=>load(i);
+   const tile=document.createElement('div');tile.className='level-tile';tile.append(b);
+   const pages=availableStory(),scene=i%5===0?Math.floor(i/5):i===levels.length-1&&pages.includes(storyEnding)?pages.length-1:null;
+   if(unlocked&&scene!==null&&scene<pages.length){const replay=document.createElement('button');replay.className='level-scene';replay.textContent='▷ Scene';replay.setAttribute('aria-label',`Watch ${pages[scene]===storyEnding?'ending':`level ${i+1} story scene`}: ${pages[scene].title}`);replay.title=pages[scene].title;replay.onclick=()=>openStory(scene);tile.append(replay)}
+   grid.append(tile);
   });$('levels').append(chapter);
  }
  const count=Object.keys(bests).length;$('progress-label').textContent=`${count} / ${levels.length} completed`;$('progress-percent').textContent=`${Math.round(count/levels.length*100)}%`;$('progress-bar').value=count;$('progress-bar').max=levels.length;
@@ -261,7 +265,8 @@ document.addEventListener('visibilitychange',()=>{moveBuffer.clear();touch=null;
 let storyPage=0,storyOpenedAt=0;
 const availableStory=()=>storyPages(bests,levels.length);
 function renderStory(){const pages=availableStory(),beat=pages[storyPage];$('story-position').textContent=beat===storyEnding?'HOME TOGETHER':`WORLD ${storyPage+1} · OUR STORY SO FAR`;$('story-heading').textContent=beat.title;$('story-copy').textContent=beat.text;$('story-previous').disabled=storyPage===0;$('story-next').disabled=storyPage===pages.length-1;}
-$('story-recap').onclick=()=>{storyOpenedAt=performance.now();storyPage=availableStory().length-1;renderStory();$('story-dialog').showModal()};
+function openStory(page=availableStory().length-1){storyOpenedAt=performance.now();storyPage=page;renderStory();$('story-dialog').showModal()}
+$('story-recap').onclick=()=>openStory(0);
 $('story-previous').onclick=()=>{if(storyPage>0){storyPage--;renderStory()}};
 $('story-next').onclick=()=>{if(storyPage<availableStory().length-1){storyPage++;renderStory()}};
 $('close-story').onclick=$('story-done').onclick=()=>$('story-dialog').close();

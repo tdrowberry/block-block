@@ -80,6 +80,8 @@ button:active:not(:disabled){transform:translateY(2px) scale(.98)}
 @media(max-width:699px){.menu-intro{min-height:410px}.hero-art{width:300px;top:190px;right:0}.menu-intro p{max-width:290px}}
 @media(max-width:350px){.hero-art{width:270px;top:198px;right:-5px}}
 
+.menu-header{flex-wrap:wrap;gap:12px}.menu-tools{display:flex;align-items:center;gap:8px;margin-left:auto}.story-line-button{min-height:44px;padding:0 12px;border:1px solid #4d655245;border-radius:12px;background:#ffffff05;color:#c6d8b9;font-size:12px}
+.level-tile{min-width:0;display:flex;flex-direction:column;gap:4px}.level-tile .level-button{width:100%;flex:1}.level-scene{display:block;width:100%;min-height:44px;padding:4px 0;border-radius:8px;background:#ffffff07;color:#c5d9ad;font-size:11px;white-space:nowrap}
 /* A gentle family story, with reading time controlled by the player. */
 .world{cursor:default;overflow-y:auto;display:block;padding:24px 18px;padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 .story-card{max-width:540px;min-height:100%;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
