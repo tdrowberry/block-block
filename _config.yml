@@ -1,0 +1,18 @@
+# Publish the browser game from main without processing Android/release documents.
+# A non-UTF-8 release-assets README previously blocked every Pages deployment.
+exclude:
+  - android
+  - archive
+  - release-assets
+  - github-pages
+  - dist
+  - README.md
+  - PLAY-RELEASE.md
+  - STORY.md
+  - package.json
+  - server.js
+  - generate-levels.mjs
+  - generate-master-levels.mjs
+  - generate-power-levels.mjs
+  - generate-teleport-levels.mjs
+  - make-icons.mjs

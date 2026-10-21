@@ -10,6 +10,8 @@ New players can choose **Learn to play** or **Skip to level 1**. The optional 13
 
 Run `npm start`, then open http://localhost:3000. No package installation is needed (Node.js 18+).
 
+The public web game is https://tdrowberry.github.io/block-block/. GitHub Pages publishes the root of `main` on each push, using the same HTML, JavaScript, CSS and artwork copied into Android releases. `_config.yml` excludes Android, archives and release documents from the web build. After a successful Pages deployment, reload the web game to receive the changes; the offline cache version is bumped when game assets change. Play Console approval applies separately to the Android app.
+
 - Arrow keys or WASD: roll
 - LVL button or Escape: return to level select
 - R: restart
